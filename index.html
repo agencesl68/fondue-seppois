@@ -593,6 +593,12 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <label class="chk"><input type="checkbox" id="evFx"> Effets (neige, étincelles, guirlande)</label>
     </div>
     <div class="card">
+      <h3>Lien vers l'ordinateur de l'accueil</h3>
+      <p>Crée un lien privé qui contient le lien du sheet, ton plan de salle, les placements et les chaises en plus. Ouvre-le sur l'ordinateur de l'accueil : tout s'y installe d'un coup (les arrivées pointées ne sont pas transférées). Ne partage ce lien qu'avec l'équipe, comme le lien du sheet.</p>
+      <div class="btns"><button class="btn gold sm" id="cfgCopy">Créer et copier le lien</button></div>
+      <textarea class="fi" id="cfgOut" rows="3" readonly hidden style="margin-top:10px;font-size:12px;word-break:break-all"></textarea>
+    </div>
+    <div class="card">
       <h3>Sauvegarde</h3>
       <p>Plan, placements et arrivées sont gardés sur cet ordinateur. Exporte-les pour un autre PC ou en secours.</p>
       <div class="btns">
@@ -629,10 +635,7 @@ function defaultPlan(){
     {id:'z5',kind:'entry', label:'Entrée',            x:900, y:1180,w:240,h:60, rot:0},
   ]};
 }
-const DEMO_CSV=`Table n°,Noms,Prénoms,Total,Infos supplémentaires
-3,Muller,Jean,4,
-12,Meyer,Pierre,6,`;
-
+const hadStored=(()=>{ try{ return !!JSON.parse(localStorage.getItem(LS))?.plan; }catch(e){ return false; } })();
 let S=load();
 function load(){
   let s={}; try{ s=JSON.parse(localStorage.getItem(LS))||{}; }catch(e){}
@@ -682,7 +685,7 @@ function parseTables(str){
   return out;
 }
 function buildGuests(){
-  if(!S.csv){ S.csv=DEMO_CSV; S.demo=true; }
+  if(!S.csv){ S.demo=true; guests=[]; hasMeals=false; S._head=[]; S._c={}; computeSeats(); return; } // aucune réservation tant que le sheet n'est pas branché
   const rows=parseCSV(S.csv), head=rows[0]||[], auto=detectCols(head), c={};
   for(const k in auto) c[k]=(S.cols[k]!==undefined?S.cols[k]:auto[k]);
   S._head=head; S._c=c;
@@ -906,7 +909,7 @@ function renderHome(){
       <span class="gtxt"><div class="gname">${hl(g.nom.toUpperCase(),words)} ${hl(g.pre,words)}</div>
       <div class="gmeta">${g.size?`<span>${g.size} pers.${g.gratE?` dont ${g.gratE} -6 ans`:''}</span>`:''}${g.jambon?`<span class="nj">${g.jambon} jambon${g.jambon>1?'s':''}</span>`:''}${g.extra?`<span class="nx">+${g.extra} chaise${g.extra>1?'s':''}</span>`:''}${full?`<span style="color:var(--ok)">arrivé ${a.t}</span>`:''}${part?`<span style="color:var(--gold)">${a.n}/${N} là · ${N-a.n} attendu${N-a.n>1?'s':''}</span>`:''}${unpaid(g)?'<span><i class="dot" style="background:var(--warn)"></i> paiement en attente</span>':''}</div></span>
       <span class="chip${tl?' set':''}"><small>Table</small><b>${tl?esc(tl):'–'}</b></span></button>`;
-  }).join(''):`<div class="empty"><b>Aucun résultat</b>Vérifier l'orthographe, ou chercher par prénom.</div>`;
+  }).join(''):(guests.length?`<div class="empty"><b>Aucun résultat</b>Vérifier l'orthographe, ou chercher par prénom.</div>`:`<div class="empty"><b>Aucune réservation chargée</b>Ouvre le lien d'accès de l'équipe, ou colle le lien du Google Sheet dans Réglages → Source.</div>`);
   if(sel>=0) $('#list .guest[aria-selected]')?.scrollIntoView({block:'nearest'});
   const used=new Set(guests.map(g=>g.sortKey[0]));
   $('#letters').innerHTML=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(l=>{const ll=l.toLowerCase(); return `<button data-l="${ll}" class="${letter===ll?'on':''}" ${used.has(ll)?'':'disabled'}>${l}</button>`;}).join('');
@@ -919,7 +922,7 @@ function renderHome(){
     mi.textContent=wt.length?(shown.length===1?`${shown[0].display} → table ${tLabel(shown[0])}`:`${wt.length} réservation${wt.length>1?'s':''} — tables en surbrillance`):'Pas encore de table attribuée';
     mi.classList.add('show'); } else mi.classList.remove('show');
   updKpis(); $('#demo').hidden=!S.demo;
-  $('#demo').innerHTML=S.src.url?"Données de démonstration — le Google Sheet n'a pas pu être lu. <b>Vérifier dans Réglages → Source</b>":'Aucun Google Sheet branché : <b>clique ici pour coller son lien</b> (Réglages → Source). Il reste enregistré sur cet ordi uniquement.';
+  $('#demo').innerHTML=S.src.url?"Le Google Sheet n'a pas encore pu être lu (connexion ?). <b>Vérifier dans Réglages → Source</b>":'Aucun Google Sheet branché : <b>clique ici pour coller son lien</b> (Réglages → Source). Il reste enregistré sur cet ordi uniquement.';
 }
 function updKpis(){
   const arr=guests.map(g=>[g,arrOf(g)]).filter(x=>x[1]), complete=arr.filter(([g,a])=>a.n>=(g.size||1)).length, partial=arr.length-complete;
@@ -1364,9 +1367,42 @@ $('#m7no').onclick=()=>{ $('#m7').hidden=true; S.done7=true; save(); };
 function hasBk7(){ try{ return !!localStorage.getItem(BK7); }catch(e){ return false; } }
 $('#planRestore').onclick=()=>{ if(!confirm("Revenir au plan d'avant l'ajout des 7 rangées ?")) return; try{ const p=JSON.parse(localStorage.getItem(BK7)); if(p&&p.tables) mutate(()=>{ S.plan=p; selIds=new Set(); }); }catch(e){} };
 
+/* ================= Lien d'accès privé : #sheet=<id> ou #cfg=<config compressée> =================
+   Ce qui suit le « # » n'est jamais envoyé au serveur (GitHub) : le lien du sheet ne se retrouve ni dans le code ni dans les journaux. */
+const PUBLIC_URL='https://agencesl68.github.io/fondue-seppois/';
+const b64u={ enc:u8=>{ let s=''; for(let i=0;i<u8.length;i+=0x8000) s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000)); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); },
+  dec:str=>{ str=str.replace(/-/g,'+').replace(/_/g,'/'); const b=atob(str+'==='.slice((str.length+3)%4)); return Uint8Array.from(b,c=>c.charCodeAt(0)); } };
+async function packCfg(obj){ const data=new TextEncoder().encode(JSON.stringify(obj));
+  if(window.CompressionStream){ const st=new Blob([data]).stream().pipeThrough(new CompressionStream('deflate-raw')); return 'z'+b64u.enc(new Uint8Array(await new Response(st).arrayBuffer())); }
+  return 'j'+b64u.enc(data); }
+async function unpackCfg(str){ let u8=b64u.dec(str.slice(1));
+  if(str[0]==='z'){ const st=new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw')); u8=new Uint8Array(await new Response(st).arrayBuffer()); }
+  return JSON.parse(new TextDecoder().decode(u8)); }
+const sheetUrlOf=v=>/^https?:/.test(v)?v:`https://docs.google.com/spreadsheets/d/${v}/edit?usp=sharing`;
+async function applyHash(){
+  const h=new URLSearchParams(location.hash.slice(1)); if(!h.has('sheet')&&!h.has('cfg')) return false;
+  try{
+    let msg='Lien du sheet enregistré sur cet ordinateur';
+    if(h.has('cfg')){ const c=await unpackCfg(h.get('cfg'));
+      if(c.plan&&(!hadStored||confirm("Ce lien contient un plan de salle et des placements.\nRemplacer ceux de cet ordinateur ? (les arrivées déjà pointées sont gardées)"))){
+        const bg=S.plan.bg; S.plan=Object.assign({w:1800,h:1100,bgOp:.5},c.plan); if(!S.plan.bg) S.plan.bg=bg;
+        S.assign=c.assign||{}; S.extra=c.extra||{}; if(c.ev) Object.assign(S.ev,c.ev); S.done7=true; msg='Plan, placements et sheet installés sur cet ordinateur'; }
+      if(c.sheet) S.src.url=c.sheet; }
+    if(h.has('sheet')) S.src.url=sheetUrlOf(h.get('sheet'));
+    history.replaceState(null,'',location.pathname+location.search); // on retire le lien de la barre d'adresse
+    S.csv=null; save(); buildGuests(); applyEv(); renderHome(); await fetchSheet(true); scheduleRefresh(); toast(msg); return true;
+  }catch(e){ console.warn(e); history.replaceState(null,'',location.pathname+location.search); toast("Lien d'accès illisible — colle le lien du sheet dans Réglages → Source"); return false; }
+}
+$('#cfgCopy').onclick=async()=>{
+  if(!S.src.url) return toast("Branche d'abord le Google Sheet (Réglages → Source)");
+  const cfg={v:1, sheet:S.src.url, plan:{...S.plan,bg:null}, assign:S.assign, extra:S.extra, ev:{gratAExtra:S.ev.gratAExtra,pay:S.ev.pay,timeout:S.ev.timeout}};
+  const url=PUBLIC_URL+'#cfg='+await packCfg(cfg), out=$('#cfgOut'); out.value=url; out.hidden=false; out.select();
+  try{ await navigator.clipboard.writeText(url); toast("Lien copié — ouvre-le sur l'ordinateur de l'accueil"); }catch(e){ toast('Copie le lien affiché (Ctrl+C)'); } };
+
 /* ================= Démarrage ================= */
-buildGuests(); applyEv(); renderHome(); $('#q').focus(); offerSeven();
-fetchSheet(false); scheduleRefresh();
+buildGuests(); applyEv(); renderHome(); $('#q').focus();
+applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } offerSeven(); });
+addEventListener('hashchange',()=>applyHash()); // lien d'accès ouvert alors que l'app est déjà affichée
 </script>
 </body>
 </html>
