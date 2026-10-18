@@ -301,6 +301,8 @@ table.data th{color:var(--muted);font-weight:800;font-size:11px;text-transform:u
 .cnt b{font:400 30px Anton;color:var(--gold);display:block}
 .cnt b.bump{animation:bump .35s var(--ease)}
 @keyframes bump{40%{transform:scale(1.4)}}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.mbox.shake{animation:shake .4s}
 .cnt span{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .arrinfo{flex-basis:100%;font-size:14px;color:var(--muted);font-weight:600}
 .arrinfo.part{color:var(--gold)}.arrinfo.ok{color:#86EFAC}
@@ -612,6 +614,11 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 </section>
 
 <div class="ctx" id="ctx" hidden></div>
+<div class="modal" id="mCode" hidden><div class="mbox"><h3>Code d'accès</h3>
+  <p>Tape le code de l'équipe pour charger les réservations du Google Sheet. Il n'est demandé qu'une fois sur cet ordinateur.</p>
+  <input class="fi" id="codeIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Code d'accès" style="font-size:22px;padding:12px 14px">
+  <p class="status err" id="codeErr" hidden style="margin:8px 0 0">Code incorrect — réessaie.</p>
+  <div class="btns" style="margin-top:16px"><button class="btn gold" id="codeOk">Charger les réservations</button><button class="btn ghost" id="codeNo">Plus tard</button><button class="btn ghost sm" id="codeSrc" style="margin-left:auto">J'ai le lien du sheet</button></div></div></div>
 <div class="modal" id="m7" hidden><div class="mbox"><h3>7 tables par colonne</h3><p id="m7t"></p>
   <div class="btns"><button class="btn gold" id="m7ok">Oui, ajouter les rangées</button><button class="btn ghost" id="m7no">Non merci</button></div></div></div>
 <script>
@@ -641,7 +648,8 @@ function load(){
   let s={}; try{ s=JSON.parse(localStorage.getItem(LS))||{}; }catch(e){}
   const d={ src:{url:SHEET,refresh:60}, cols:{}, csv:null, plan:defaultPlan(), assign:{}, arrived:{}, extra:{},
     ev:{kick:'Repas dansant', t1:'Fondue', t2:'Suisse', sub:"Amicale des Sapeurs-Pompiers de Seppois-le-Bas", date:'Samedi 24 octobre 2026 · Salle polyvalente', timeout:30, pay:true, fx:true, logo:null, gratAExtra:true}};
-  const o=Object.assign(d,s); o.extra=o.extra||{}; o.ev=Object.assign(d.ev,s.ev||{}); o.plan=Object.assign({w:1800,h:1100,bgOp:.5},o.plan);
+  const o=Object.assign(d,s); o.extra=o.extra||{};
+  if(typeof o.csv==='string'&&/^Table n°,Noms,Prénoms,Total,Infos supplémentaires\r?\n3,Muller,Jean/.test(o.csv)){ o.csv=null; o.demo=true; } // anciennes réservations d'exemple o.ev=Object.assign(d.ev,s.ev||{}); o.plan=Object.assign({w:1800,h:1100,bgOp:.5},o.plan);
   return o;
 }
 function save(){ try{ const {_head,_c,...rest}=S; localStorage.setItem(LS,JSON.stringify(rest)); }catch(e){ console.warn('Stockage plein ?',e); } }
@@ -909,7 +917,7 @@ function renderHome(){
       <span class="gtxt"><div class="gname">${hl(g.nom.toUpperCase(),words)} ${hl(g.pre,words)}</div>
       <div class="gmeta">${g.size?`<span>${g.size} pers.${g.gratE?` dont ${g.gratE} -6 ans`:''}</span>`:''}${g.jambon?`<span class="nj">${g.jambon} jambon${g.jambon>1?'s':''}</span>`:''}${g.extra?`<span class="nx">+${g.extra} chaise${g.extra>1?'s':''}</span>`:''}${full?`<span style="color:var(--ok)">arrivé ${a.t}</span>`:''}${part?`<span style="color:var(--gold)">${a.n}/${N} là · ${N-a.n} attendu${N-a.n>1?'s':''}</span>`:''}${unpaid(g)?'<span><i class="dot" style="background:var(--warn)"></i> paiement en attente</span>':''}</div></span>
       <span class="chip${tl?' set':''}"><small>Table</small><b>${tl?esc(tl):'–'}</b></span></button>`;
-  }).join(''):(guests.length?`<div class="empty"><b>Aucun résultat</b>Vérifier l'orthographe, ou chercher par prénom.</div>`:`<div class="empty"><b>Aucune réservation chargée</b>Ouvre le lien d'accès de l'équipe, ou colle le lien du Google Sheet dans Réglages → Source.</div>`);
+  }).join(''):(guests.length?`<div class="empty"><b>Aucun résultat</b>Vérifier l'orthographe, ou chercher par prénom.</div>`:`<div class="empty"><b>Aucune réservation chargée</b>Clique sur le bandeau du haut et tape le code d'accès de l'équipe.</div>`);
   if(sel>=0) $('#list .guest[aria-selected]')?.scrollIntoView({block:'nearest'});
   const used=new Set(guests.map(g=>g.sortKey[0]));
   $('#letters').innerHTML=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(l=>{const ll=l.toLowerCase(); return `<button data-l="${ll}" class="${letter===ll?'on':''}" ${used.has(ll)?'':'disabled'}>${l}</button>`;}).join('');
@@ -922,7 +930,7 @@ function renderHome(){
     mi.textContent=wt.length?(shown.length===1?`${shown[0].display} → table ${tLabel(shown[0])}`:`${wt.length} réservation${wt.length>1?'s':''} — tables en surbrillance`):'Pas encore de table attribuée';
     mi.classList.add('show'); } else mi.classList.remove('show');
   updKpis(); $('#demo').hidden=!S.demo;
-  $('#demo').innerHTML=S.src.url?"Le Google Sheet n'a pas encore pu être lu (connexion ?). <b>Vérifier dans Réglages → Source</b>":'Aucun Google Sheet branché : <b>clique ici pour coller son lien</b> (Réglages → Source). Il reste enregistré sur cet ordi uniquement.';
+  $('#demo').innerHTML=S.src.url?"Le Google Sheet n'a pas encore pu être lu (connexion ?). <b>Vérifier dans Réglages → Source</b>":'Aucune réservation chargée : <b>clique ici et tape le code d\'accès de l\'équipe</b>.';
 }
 function updKpis(){
   const arr=guests.map(g=>[g,arrOf(g)]).filter(x=>x[1]), complete=arr.filter(([g,a])=>a.n>=(g.size||1)).length, partial=arr.length-complete;
@@ -939,7 +947,7 @@ $('#list').addEventListener('click',e=>{ const b=e.target.closest('.guest'); if(
 $('#list').addEventListener('mouseover',e=>{ const b=e.target.closest('.guest'); if(!b||!($('#q').value||letter)) return; const g=guests.find(x=>x.i==b.dataset.k);
   const hov=new Set(g.tables.map(t=>t.id).filter(Boolean)); document.querySelectorAll('#homePlan .t').forEach(n=>n.classList.toggle('hover',hov.has(n.dataset.id))); });
 $('#editPlanBtn').onclick=()=>openAdmin('pPlan');
-$('#demo').onclick=()=>{ openAdmin('pSource'); $('#srcUrl').focus(); };
+$('#demo').onclick=()=>{ if(S.src.url){ openAdmin('pSource'); $('#srcUrl').focus(); } else askCode(); };
 /* info-bulle au survol d'une table */
 $('#homePlan').addEventListener('mousemove',e=>{ const gEl=e.target.closest('.t'), tip=$('#tip'); if(!gEl){ tip.hidden=true; return; }
   const t=byId[gEl.dataset.id]; if(!t) return; const st=tstat[t.id], used=occ[t.id].filter(Boolean).length;
@@ -1079,6 +1087,7 @@ let last=performance.now();
 
 /* ================= Clavier global ================= */
 document.addEventListener('keydown',e=>{
+  if(!$('#mCode').hidden){ if(e.key==='Escape') $('#codeNo').click(); return; }
   if(!$('#m7').hidden){ if(e.key==='Escape') $('#m7no').click(); return; }
   const ovOn=$('#ov').classList.contains('show'), admOn=$('#adm').classList.contains('show');
   if(admOn){ if($('#pPlan').classList.contains('on')) editorKey(e); else if(e.key==='Escape') closeAdmin(); return; }
@@ -1367,6 +1376,31 @@ $('#m7no').onclick=()=>{ $('#m7').hidden=true; S.done7=true; save(); };
 function hasBk7(){ try{ return !!localStorage.getItem(BK7); }catch(e){ return false; } }
 $('#planRestore').onclick=()=>{ if(!confirm("Revenir au plan d'avant l'ajout des 7 rangées ?")) return; try{ const p=JSON.parse(localStorage.getItem(BK7)); if(p&&p.tables) mutate(()=>{ S.plan=p; selIds=new Set(); }); }catch(e){} };
 
+/* ================= Code d'accès : le lien du sheet est chiffré (AES-GCM, clé dérivée du code par PBKDF2) =================
+   Le dépôt est public : sans le code, le lien du sheet (et donc les réservations) reste illisible. */
+const SHEET_ENC='hSC3ojtfEK+1y65uYMbMwZ9x7qPXj7FrwF1iIfEf3RNE0DrJ0vnLzXEO/DenGsODgyY8XFLVJeOOUQzMl8p2gvJ+IeGt7MEsTuOYAY6Ivg2sUsW0anpDSsaiNZYgF3//x7wZx23QmEBitDeE4ErgkTAHPTRUsa10Avx+ll8tOTZiyrp1VK0yUV/Daxg/abYp';
+const normCode=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+async function unlockSheet(code){ const all=Uint8Array.from(atob(SHEET_ENC),c=>c.charCodeAt(0)), salt=all.slice(0,16), iv=all.slice(16,28), ct=all.slice(28);
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(normCode(code)),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct)); }
+function askCode(){ if(!window.crypto?.subtle){ openAdmin('pSource'); $('#srcUrl').focus(); return; }
+  $('#codeErr').hidden=true; $('#mCode').hidden=false; $('#codeIn').value=''; setTimeout(()=>$('#codeIn').focus(),50); }
+$('#codeOk').onclick=async()=>{ const b=$('#codeOk'), v=$('#codeIn').value; if(!normCode(v)) return $('#codeIn').focus();
+  b.disabled=true; b.textContent='Vérification…';
+  try{ const url=await unlockSheet(v); S.src.url=url; S.csv=null; save(); $('#mCode').hidden=true; toast('Code accepté — chargement des réservations…'); await fetchSheet(true); scheduleRefresh(); renderHome(); offerSeven(); }
+  catch(e){ $('#codeErr').hidden=false; const m=$('#mCode .mbox'); m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake'); $('#codeIn').select(); }
+  b.disabled=false; b.textContent='Charger les réservations'; };
+$('#codeIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#codeOk').click(); } });
+$('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
+$('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
+
+/* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
+const APP_V='2026-10-18.3';
+(async()=>{ if(!/^https?:$/.test(location.protocol)) return;
+  try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
+    if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
+
 /* ================= Lien d'accès privé : #sheet=<id> ou #cfg=<config compressée> =================
    Ce qui suit le « # » n'est jamais envoyé au serveur (GitHub) : le lien du sheet ne se retrouve ni dans le code ni dans les journaux. */
 const PUBLIC_URL='https://agencesl68.github.io/fondue-seppois/';
@@ -1401,7 +1435,7 @@ $('#cfgCopy').onclick=async()=>{
 
 /* ================= Démarrage ================= */
 buildGuests(); applyEv(); renderHome(); $('#q').focus();
-applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } offerSeven(); });
+applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else offerSeven(); });
 addEventListener('hashchange',()=>applyHash()); // lien d'accès ouvert alors que l'app est déjà affichée
 </script>
 </body>

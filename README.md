@@ -6,13 +6,13 @@ App d'accueil pour le repas dansant « Fondue Suisse » du 24 octobre 2026 (sall
 **En ligne :** https://agencesl68.github.io/fondue-seppois/
 
 ## Utilisation
-1. Ouvrir le **lien d'accès de l'équipe** sur l'ordinateur de l'accueil (Chrome conseillé) :
-   `https://agencesl68.github.io/fondue-seppois/#sheet=<identifiant du Google Sheet>`
-   ou le lien créé par *Réglages → Soirée & sauvegarde → Créer et copier le lien* (plan + placements + sheet).
-2. C'est tout : l'app enregistre le lien sur cet ordinateur, retire le lien de la barre d'adresse et charge les réservations.
+1. Ouvrir https://agencesl68.github.io/fondue-seppois/ sur l'ordinateur de l'accueil (Chrome ou Safari).
+2. Taper le **code d'accès de l'équipe** (demandé une seule fois par ordinateur) : les réservations se chargent.
+3. Pour retrouver le plan de salle et les placements préparés sur un autre ordinateur :
+   sur celui-ci, *Réglages → Soirée & sauvegarde → Créer et copier le lien*, puis ouvrir ce lien sur l'ordinateur de l'accueil.
 
-Ce qui suit le « # » n'est jamais envoyé à GitHub : le lien du sheet (et donc les données des réservations)
-n'est ni dans ce code public, ni sur le serveur. Sans lien d'accès, l'app n'affiche aucune réservation.
+Le lien du Google Sheet est **chiffré** dans ce code public (AES-GCM, clé dérivée du code d'accès) :
+sans le code, les réservations restent illisibles. L'app se met à jour toute seule quand une nouvelle version est publiée.
 
 ## Ce que fait l'app
 - Lit le Google Sheet **en lecture seule** (export CSV) — elle n'écrit jamais dedans.
