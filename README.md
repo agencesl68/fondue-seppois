@@ -14,6 +14,12 @@ App d'accueil pour le repas dansant « Fondue Suisse » du 24 octobre 2026 (sall
 Le lien du Google Sheet est **chiffré** dans ce code public (AES-GCM, clé dérivée du code d'accès) :
 sans le code, les réservations restent illisibles. L'app se met à jour toute seule quand une nouvelle version est publiée.
 
+## Placeurs (téléphones)
+Sur le téléphone de chaque placeur : ouvrir https://agencesl68.github.io/fondue-seppois/?placeur, taper le code d'accès puis son prénom.
+Quand l'accueil pointe une arrivée, le placeur reçoit le nom, le nombre de personnes, la table et le chemin animé sur le plan
+(vibration + son si activé). « Je m'en occupe » puis « Placés » : l'accueil voit en direct qui accompagne qui.
+Les messages passent par le relais gratuit ntfy.sh, compressés et **chiffrés** (AES-GCM) : le relais ne peut pas les lire.
+
 ## Ce que fait l'app
 - Lit le Google Sheet **en lecture seule** (export CSV) — elle n'écrit jamais dedans.
 - Recherche par nom, table en grand, chemin animé jusqu'à la table, pointage des arrivées (même partielles).

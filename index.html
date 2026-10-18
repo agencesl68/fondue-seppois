@@ -59,7 +59,7 @@ header{position:relative;display:flex;align-items:center;gap:18px;padding:46px 2
 .ttl .sw::before{left:10px;top:5px;width:6px;height:16px}.ttl .sw::after{left:5px;top:10px;width:16px;height:6px}
 .org{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.03em;margin-top:6px}
 .datepill{display:inline-flex;gap:8px;align-items:center;margin-left:14px;padding:6px 12px;border-radius:999px;background:rgba(255,201,60,.12);border:1px solid var(--line-2);color:var(--gold);font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
-.kpis{margin-left:auto;display:flex;gap:10px;align-items:center}
+.kpis{margin-left:12px;display:flex;gap:10px;align-items:center}
 .kpi{padding:9px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);min-width:128px;backdrop-filter:blur(10px)}
 .kpi b{font-family:Anton;font-weight:400;font-size:24px;line-height:1.05;display:block;color:var(--gold)}
 .kpi span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
@@ -127,6 +127,7 @@ header{position:relative;display:flex;align-items:center;gap:18px;padding:46px 2
 /* jambon */
 .t .chair.ham{fill:#E88EA0}
 .t .chair.xtra{fill:#7DD3FC}
+.t .chair.here{fill:#4ADE80}
 .t.ham .t-shape{fill:url(#hamGrad);stroke:#F3A3B3}
 .t.ham .t-label{fill:#FFE6EC}
 .hamb circle{fill:#E88EA0;stroke:#FFE6EC;stroke-width:2}
@@ -330,6 +331,52 @@ table.data th{color:var(--muted);font-weight:800;font-size:11px;text-transform:u
 .mbox{max-width:560px;width:100%;background:linear-gradient(180deg,#221E58,#14163F);border:1px solid var(--line-2);border-radius:22px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:rise .4s var(--ease)}
 .mbox h3{font:400 30px Anton;letter-spacing:.03em;margin:0 0 8px;color:var(--gold);text-transform:uppercase}
 .mbox p{color:var(--ink);margin:0 0 18px}
+[hidden]{display:none!important}
+.modesw{margin-left:auto;display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.modesw button{border:0;background:none;padding:9px 14px;border-radius:10px;font-weight:800;font-size:14px;color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+.modesw button.on{background:var(--gold);color:#2A1A05}
+.modesw .bdg{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;display:inline-grid;place-items:center}
+.queue{margin-top:10px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:8px 12px;max-height:180px;overflow:auto}
+.queue h4{margin:0 0 6px;font:400 15px Anton;letter-spacing:.06em;color:var(--gold);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.qi{display:flex;gap:10px;align-items:center;font-size:13px;padding:5px 0;border-top:1px solid var(--line)}
+.queue h4+.qi,.pvdone h4+.qi{border-top:0}
+.qi b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.st.wait{background:rgba(255,201,60,.16);color:var(--gold)}.st.claimed{background:rgba(96,165,250,.16);color:#93C5FD}.st.done{background:rgba(34,197,94,.16);color:#86EFAC}
+.rplaceur{flex-basis:100%;font-size:14px;font-weight:800;color:#93C5FD}
+.rplaceur:empty{display:none}
+.pv{position:relative;z-index:1;padding:6px 16px 60px;max-width:780px;width:100%;margin:0 auto;overflow:auto;min-height:0}
+.pvhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+.pvhead .ttlp{font:400 28px Anton;letter-spacing:.04em;text-transform:uppercase;margin-right:auto}
+.pvst{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.pvst.ok{color:#86EFAC;border-color:rgba(34,197,94,.45)}.pvst.err{color:#F87171;border-color:rgba(248,113,113,.5)}
+.pc{border-radius:20px;border:1px solid var(--line);background:rgba(20,22,62,.96);padding:14px 16px;margin-bottom:12px;animation:rise .45s var(--ease)}
+.pc.wait{border-color:var(--gold);animation:rise .45s var(--ease),pcPulse 1.6s ease-in-out infinite}
+@keyframes pcPulse{0%,100%{box-shadow:0 0 0 1px rgba(255,201,60,.35),0 12px 34px -14px rgba(255,201,60,.45)}50%{box-shadow:0 0 0 3px rgba(255,201,60,.6),0 14px 40px -10px rgba(255,201,60,.85)}}
+.pc.mine{border-color:#60A5FA;box-shadow:0 0 0 1px rgba(96,165,250,.45)}
+.pc.other{opacity:.55}
+.pc-top{display:flex;gap:12px;align-items:center}
+.pc-name{font:400 28px/1.05 Anton;text-transform:uppercase;flex:1;min-width:0;overflow-wrap:anywhere}
+.pc-t{text-align:center;padding:6px 14px;border-radius:14px;background:var(--red);box-shadow:0 0 0 2px var(--gold);flex:none}
+.pc-t small{display:block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.pc-t b{font:400 34px/1 Anton;color:#fff}
+.pc-meta{color:var(--muted);font-size:15px;margin:6px 0 10px}
+.pc-meta .note{display:block;margin-top:6px;font:700 21px/1.2 Caveat,cursive;color:#F4F1E8}
+.pc-plan{border-radius:14px;overflow:hidden;background:#0B0D26;border:1px solid var(--line);margin-bottom:10px;--arr:2.1s;--rd:1.4s}
+.pc-plan svg{width:100%;height:auto;display:block}
+.pc-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pc-act .who{font-size:15px;font-weight:800;color:#93C5FD}
+.pvdone h4{font:400 16px Anton;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;margin:18px 0 6px}
+.pvempty{text-align:center;color:var(--muted);padding:50px 10px}
+.pvempty b{display:block;font:400 26px Anton;color:var(--ink);margin-bottom:6px;letter-spacing:.04em}
+@media (max-width:700px){
+  header{padding:40px 12px 8px;gap:10px;flex-wrap:wrap} .titles{flex:1;min-width:0} .crest{width:58px;height:58px;margin:-6px 0}
+  .kicker{font-size:12px} .ttl .f1{font-size:30px} .ttl .f2{font-size:26px} .ttl .sw{width:20px;height:20px}
+  .org,.datepill,.kpis{display:none!important} .ibtn{width:42px;height:42px}
+  .modesw{order:5;margin:4px 0 0;width:100%} .modesw button{flex:1;justify-content:center;padding:10px}
+  .pv{padding:4px 12px 60px} .pc{padding:12px} .pc-name{font-size:24px} .pc-t b{font-size:30px}
+}
+.app{grid-template-columns:minmax(0,1fr)}
 .chk{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:10px}
 input[type=range]{width:100%;accent-color:var(--gold)}
 
@@ -380,6 +427,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <div class="ttl"><span class="f1" id="evT1">Fondue</span><span class="f2" id="evT2">SUISSE</span><span class="sw"></span></div>
       <div class="org" id="evSubT">Amicale des Sapeurs-Pompiers de Seppois-le-Bas</div>
     </div>
+    <div class="modesw" id="modeSw"><button data-m="accueil" class="on">Accueil</button><button data-m="placeur">Placeurs <span class="bdg" id="pvBadge" hidden></span></button></div>
     <div class="kpis">
       <div class="kpi"><b id="kArr">0</b><span id="kArrL">réservations complètes</span><div class="bar"><i id="kArrBar"></i></div></div>
       <div class="kpi"><b id="kPers">0</b><span>personnes présentes</span><div class="bar"><i id="kPersBar"></i></div></div>
@@ -399,11 +447,12 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <div class="hint">Tapez quelques lettres · <kbd>↑</kbd><kbd>↓</kbd> pour choisir · <kbd>Entrée</kbd> pour ouvrir · <kbd>Échap</kbd> pour effacer</div>
       <div class="letters" id="letters"></div>
       <div class="list" id="list" role="listbox"></div>
+      <div class="queue" id="queue" hidden></div>
     </div>
     <section class="plancard">
       <div class="planhead">
         <h2>Plan de la salle</h2>
-        <div class="legend"><span><i style="background:var(--red);box-shadow:0 0 0 1px var(--gold)"></i>Recherche</span><span><i style="background:var(--chair-occ)"></i>Place attribuée</span><span><i style="background:#E88EA0"></i>Jambon</span><span><i style="background:#7DD3FC"></i>Chaise en plus</span><span><i style="background:var(--chair)"></i>Libre</span></div>
+        <div class="legend"><span><i style="background:var(--red);box-shadow:0 0 0 1px var(--gold)"></i>Recherche</span><span><i style="background:var(--chair-occ)"></i>Place attribuée</span><span><i style="background:#E88EA0"></i>Jambon</span><span><i style="background:#7DD3FC"></i>Chaise en plus</span><span><i style="background:#4ADE80"></i>Arrivé</span><span><i style="background:var(--chair)"></i>Libre</span></div>
         <button class="btn ghost sm" id="editPlanBtn">Modifier le plan</button>
       </div>
       <div class="planbody"><svg id="homePlan" role="img" aria-label="Plan de la salle"></svg></div>
@@ -411,6 +460,11 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <div class="tip" id="tip" hidden></div>
     </section>
   </div>
+
+  <section class="pv" id="pv" hidden>
+    <div class="pvhead"><span class="ttlp">Placeurs</span><span class="pvst" id="pvState"></span><button class="btn ghost sm" id="pvName"></button><button class="btn ghost sm" id="pvSound"></button></div>
+    <div id="pvList"></div>
+  </section>
 </div>
 
 <!-- Fiche résultat -->
@@ -428,7 +482,9 @@ input[type=range]{width:100%;accent-color:var(--gold)}
         <button class="btn go" id="rAll"></button>
         <div class="stepper"><button class="stp" id="rMinus" aria-label="Une personne de moins">−</button><div class="cnt"><b id="rCount">0</b><span id="rOf"></span></div><button class="stp" id="rPlus" aria-label="Une personne de plus">+</button></div>
         <div class="arrinfo" id="rArrInfo"></div>
+        <div class="rplaceur" id="rPlaceur"></div>
       </div>
+      <button class="btn ghost" id="rCall">Appeler un placeur</button>
       <button class="btn ghost" id="rBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>Retour</button>
     </div>
   </div>
@@ -595,6 +651,13 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <label class="chk"><input type="checkbox" id="evFx"> Effets (neige, étincelles, guirlande)</label>
     </div>
     <div class="card">
+      <h3>Placeurs</h3>
+      <p>Quand une arrivée est pointée à l'accueil, le nom, le nombre de personnes, la table et le chemin s'affichent sur les téléphones des placeurs. Sur chaque téléphone : ouvrir <b>agencesl68.github.io/fondue-seppois/?placeur</b>, taper le code d'accès puis son prénom. Les messages sont chiffrés : seuls les appareils qui ont le code peuvent les lire.</p>
+      <label class="chk"><input type="checkbox" id="evPlaceurs"> Envoyer les arrivées aux placeurs</label>
+      <p class="status" id="relayInfo"></p>
+      <div class="btns" style="margin-top:8px"><button class="btn ghost sm" id="planSend">Renvoyer le plan aux placeurs</button></div>
+    </div>
+    <div class="card">
       <h3>Lien vers l'ordinateur de l'accueil</h3>
       <p>Crée un lien privé qui contient le lien du sheet, ton plan de salle, les placements et les chaises en plus. Ouvre-le sur l'ordinateur de l'accueil : tout s'y installe d'un coup (les arrivées pointées ne sont pas transférées). Ne partage ce lien qu'avec l'équipe, comme le lien du sheet.</p>
       <div class="btns"><button class="btn gold sm" id="cfgCopy">Créer et copier le lien</button></div>
@@ -647,7 +710,7 @@ let S=load();
 function load(){
   let s={}; try{ s=JSON.parse(localStorage.getItem(LS))||{}; }catch(e){}
   const d={ src:{url:SHEET,refresh:60}, cols:{}, csv:null, plan:defaultPlan(), assign:{}, arrived:{}, extra:{},
-    ev:{kick:'Repas dansant', t1:'Fondue', t2:'Suisse', sub:"Amicale des Sapeurs-Pompiers de Seppois-le-Bas", date:'Samedi 24 octobre 2026 · Salle polyvalente', timeout:30, pay:true, fx:true, logo:null, gratAExtra:true}};
+    ev:{kick:'Repas dansant', t1:'Fondue', t2:'Suisse', sub:"Amicale des Sapeurs-Pompiers de Seppois-le-Bas", date:'Samedi 24 octobre 2026 · Salle polyvalente', timeout:30, pay:true, fx:true, logo:null, gratAExtra:true, placeurs:true}};
   const o=Object.assign(d,s); o.extra=o.extra||{};
   if(typeof o.csv==='string'&&/^Table n°,Noms,Prénoms,Total,Infos supplémentaires\r?\n3,Muller,Jean/.test(o.csv)){ o.csv=null; o.demo=true; } // anciennes réservations d'exemple o.ev=Object.assign(d.ev,s.ev||{}); o.plan=Object.assign({w:1800,h:1100,bgOp:.5},o.plan);
   return o;
@@ -682,7 +745,7 @@ function resizeImage(file,max,cb){ const r=new FileReader(); r.onload=()=>{ cons
   c.width=im.width*k; c.height=im.height*k; c.getContext('2d').drawImage(im,0,0,c.width,c.height); cb(c.toDataURL('image/jpeg',.8)); }; im.src=r.result; }; r.readAsDataURL(file); }
 
 /* ================= Données ================= */
-let guests=[], occ={}, byId={}, tstat={}, ham={}, xtra={}, hasMeals=false;
+let guests=[], occ={}, byId={}, tstat={}, ham={}, xtra={}, hereSeats={}, hasMeals=false;
 function parseTables(str){
   const out=[];
   String(str||'').split(/[,;\/+&]|\bet\b/i).map(s=>s.trim()).filter(Boolean).forEach(p=>{
@@ -730,8 +793,8 @@ function distribute(total,weights){ const W=weights.reduce((a,b)=>a+b,0); if(!W|
 function computeSeats(){
   byId={}; S.plan.tables.forEach(t=>byId[t.id]=t);
   const byLabel={}; S.plan.tables.forEach(t=>byLabel[norm(t.label)]=t);
-  occ={}; tstat={}; ham={}; xtra={};
-  S.plan.tables.forEach(t=>{ occ[t.id]=new Array(+t.seats||0).fill(null); tstat[t.id]={n:0,f:0,j:0,p:0,h:0,x:0,list:[]}; ham[t.id]=new Set(); xtra[t.id]=new Set(); });
+  occ={}; tstat={}; ham={}; xtra={}; hereSeats={};
+  S.plan.tables.forEach(t=>{ occ[t.id]=new Array(+t.seats||0).fill(null); tstat[t.id]={n:0,f:0,j:0,p:0,h:0,x:0,list:[]}; ham[t.id]=new Set(); xtra[t.id]=new Set(); hereSeats[t.id]=new Set(); });
   [...guests].sort((a,b)=>a.i-b.i).forEach(g=>{
     const src=g.sheetTable||S.assign[g.key]||''; g.fromSheet=!!g.sheetTable;
     g.tables=parseTables(src).map(l=>byLabel[norm(l)]||{id:null,label:l});
@@ -745,7 +808,7 @@ function computeSeats(){
     const tot=cnt.reduce((a,b)=>a+b,0), jam=distribute(Math.min(g.jambon,tot),cnt), pet=distribute(Math.min(g.gratE,tot),cnt), xs=distribute(Math.min(g.extra,tot),cnt), here=distribute(Math.min(arrOf(g)?.n||0,tot),cnt);
     g.perTable=tids.map((id,i)=>({tid:id,n:cnt[i],j:jam[i],f:Math.max(0,cnt[i]-jam[i]-pet[i]-xs[i]),p:pet[i],x:xs[i],h:here[i]}));
     g.perTable.forEach(pt=>{ const st=tstat[pt.tid]; st.n+=pt.n; st.j+=pt.j; st.f+=pt.f; st.p+=pt.p; st.x+=pt.x; st.h+=pt.h; st.list.push({g,n:pt.n,j:pt.j});
-      const mine=g.seats.filter(x=>x.tid===pt.tid).map(x=>x.s); mine.slice(Math.max(0,mine.length-pt.j)).forEach(x=>ham[pt.tid].add(x)); mine.slice(0,pt.x).forEach(x=>xtra[pt.tid].add(x)); });
+      const mine=g.seats.filter(x=>x.tid===pt.tid).map(x=>x.s); mine.slice(Math.max(0,mine.length-pt.j)).forEach(x=>ham[pt.tid].add(x)); mine.slice(0,pt.x).forEach(x=>xtra[pt.tid].add(x)); mine.slice(0,pt.h).forEach(x=>hereSeats[pt.tid].add(x)); });
   });
 }
 /* arrivées : nombre de personnes du groupe déjà là (compatible avec l'ancien format « heure ») */
@@ -766,7 +829,7 @@ async function fetchSheet(manual){
   try{
     const r=await fetch(csvUrl(S.src.url)+'&_='+Date.now(),{cache:'no-store'}); const txt=await r.text();
     if(!r.ok||/^\s*<(!doctype|html)/i.test(txt)) throw new Error('sheet non lisible par lien');
-    const changed=txt!==S.csv; S.csv=txt; S.demo=false; S.lastSync=now(); save();
+    const changed=txt!==S.csv; S.csv=txt; S.demo=false; S.lastSync=now(); save(); connectRelay();
     if(changed||manual){ buildGuests(); if(!$('#ov').classList.contains('show')) renderHome(); }
     $('#kSyncT').textContent=S.lastSync; st.className='status ok'; st.textContent=`✓ ${guests.length} réservations lues à ${S.lastSync}`;
   }catch(e){ st.className='status err'; st.textContent='Erreur : '+e.message+' — la dernière version lue reste utilisée.'; $('#kSyncT').textContent='hors ligne'; }
@@ -793,12 +856,12 @@ function chairs(t){
 const rotA=o=>o.rot?` transform="rotate(${o.rot} ${o.x} ${o.y})"`:'';
 const unrot=o=>o.rot?` transform="rotate(${-o.rot} ${o.x} ${o.y})"`:'';
 function tableSVG(t,o){
-  const st=tstat[t.id], isHam=o.meals&&st&&st.j>0, hs=ham[t.id], xsd=xtra[t.id], k=tk(t);
+  const st=tstat[t.id], isHam=o.meals&&st&&st.j>0, hs=ham[t.id], xsd=xtra[t.id], hrs=hereSeats[t.id], k=tk(t);
   const cls=['t']; if(isHam) cls.push('ham'); if(o.hit?.has(t.id)) cls.push('hit'); if(o.match?.has(t.id)) cls.push('match'); if(o.hover?.has(t.id)) cls.push('hover');
   if(o.sel?.has(t.id)) cls.push('sel'); if(o.dim&&!o.hit?.has(t.id)&&!o.match?.has(t.id)) cls.push('dimmed');
   const a=occ[t.id]||[]; let mi=0;
-  const ch=chairs(t).map((c,s)=>{ const mine=o.guest&&a[s]===o.guest, hm=o.meals&&a[s]&&hs&&hs.has(s), xt=o.meals&&a[s]&&xsd&&xsd.has(s)&&!hm;
-    return `<rect class="chair${a[s]?' occ':''}${hm?' ham':''}${xt?' xtra':''}${mine?' mine':''}" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" rx="${c.r}"${mine?` style="animation-delay:calc(var(--arr,2.1s) + ${(.1+(mi++)*.05).toFixed(2)}s)"`:''}/>`; }).join('');
+  const ch=chairs(t).map((c,s)=>{ const mine=o.guest&&a[s]===o.guest, hm=o.meals&&a[s]&&hs&&hs.has(s), xt=o.meals&&a[s]&&xsd&&xsd.has(s)&&!hm, hr=o.meals&&a[s]&&hrs&&hrs.has(s);
+    return `<rect class="chair${a[s]?' occ':''}${hm?' ham':''}${xt?' xtra':''}${hr?' here':''}${mine?' mine':''}" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" rx="${c.r}"${mine?` style="animation-delay:calc(var(--arr,2.1s) + ${(.1+(mi++)*.05).toFixed(2)}s)"`:''}/>`; }).join('');
   const free=a.filter(x=>!x).length, X=t.x-t.w/2, Y=t.y-t.h/2, vert=t.h>t.w;
   const halo=o.hit?.has(t.id)?`<ellipse class="glow" cx="${t.x}" cy="${t.y}" rx="${t.w*.85+40}" ry="${t.h*.85+40}"/><rect class="halo" x="${X}" y="${Y}" width="${t.w}" height="${t.h}" rx="8"/><rect class="halo halo2" x="${X}" y="${Y}" width="${t.w}" height="${t.h}" rx="8"/>`:'';
   const m=24*k, selbox=o.sel?.has(t.id)?`<rect class="selbox" x="${X-m}" y="${Y-m}" width="${t.w+2*m}" height="${t.h+2*m}" rx="10"/>`:'';
@@ -974,7 +1037,7 @@ function openGuest(g){
   if(unpaid(g)){ const so=parseFloat(String(g.solde).replace(',','.')); notes.push(`<div class="note pay">Paiement ${esc(g.statut.toLowerCase())}${so>0?` — reste ${String(g.solde).replace(/\s*€/,'')} €`:''}</div>`); }
   if(g.overflow) notes.push(`<div class="note">Plus de monde que de places libres — prévoir des chaises</div>`);
   $('#rNotes').innerHTML=notes.join('');
-  updArrive();
+  updArrive(); updRPlaceur();
   const ids=g.tables.map(t=>t.id).filter(Boolean), svg=$('#bigPlan');
   camReset();
   routeInfo=null; const route=ids.length?routeTo(byId[ids[0]]):'', rd=routeInfo?.dur||1.4, bp=$('.bigplan');
@@ -1037,9 +1100,11 @@ function updArrive(bump){ const N=cur.size||1, a=arrOf(cur), n=a?.n||0, left=N-n
   if(bump){ const c=$('#rCount'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); } }
 function setArrUI(n){ const N=cur.size||1, before=arrOf(cur)?.n||0; n=Math.max(0,Math.min(N,n)); if(n===before) return;
   setArr(cur,n); updArrive(true); updKpis(); armTimer();
+  if(n>before) callPlaceur(cur,n-before);
   if(n>=N&&before<N){ toast(`✓ ${cur.display} — groupe complet`); if(S.ev.fx){ const r=$('#rCount').getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,40,'#22C55E'); } }
   else toast(n?`${cur.display} : ${n}/${N} arrivé${n>1?'s':''}`:`${cur.display} : arrivée annulée`); }
 const bumpArr=d=>setArrUI((arrOf(cur)?.n||0)+d);
+$('#rCall').onclick=()=>{ callPlaceur(cur,arrOf(cur)?.n||cur.size||1,true); };
 let numBuf='', numT=0;
 function closeGuest(){ $('#ov').classList.remove('show'); clearInterval(tmr); camReset(); $('#q').value=''; letter=''; sel=-1; renderHome(); $('#q').focus(); }
 function armTimer(){ clearInterval(tmr); const T=+S.ev.timeout, bar=$('#timer'); if(!T){ bar.style.width='0'; return; }
@@ -1088,6 +1153,7 @@ let last=performance.now();
 /* ================= Clavier global ================= */
 document.addEventListener('keydown',e=>{
   if(!$('#mCode').hidden){ if(e.key==='Escape') $('#codeNo').click(); return; }
+  if(S.mode==='placeur'&&!$('#adm').classList.contains('show')) return;
   if(!$('#m7').hidden){ if(e.key==='Escape') $('#m7no').click(); return; }
   const ovOn=$('#ov').classList.contains('show'), admOn=$('#adm').classList.contains('show');
   if(admOn){ if($('#pPlan').classList.contains('on')) editorKey(e); else if(e.key==='Escape') closeAdmin(); return; }
@@ -1105,7 +1171,7 @@ document.addEventListener('keydown',e=>{
 
 /* ================= Réglages ================= */
 function openAdmin(tab){ $('#adm').classList.add('show'); if(tab) showTab(tab); renderAdmin(); }
-function closeAdmin(){ $('#adm').classList.remove('show'); computeSeats(); renderHome(); }
+function closeAdmin(){ $('#adm').classList.remove('show'); computeSeats(); renderHome(); publishPlan(false); }
 function showTab(id){ document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.p===id)); document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===id)); }
 $('#btnAdmin').onclick=()=>openAdmin(); $('#admClose').onclick=closeAdmin;
 $('#tabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; showTab(b.dataset.p); renderAdmin(); });
@@ -1115,7 +1181,7 @@ function renderAdmin(){
   $('#colMap').innerHTML=Object.keys(L).map(k=>`<div><label class="f">${L[k]}</label><select class="fi" data-col="${k}"><option value="-1">— aucune —</option>${head.map((h,i)=>`<option value="${i}" ${c[k]===i?'selected':''}>${esc(h)}</option>`).join('')}</select></div>`).join('');
   renderPlace(); renderEditor(); renderRecap();
   const E=S.ev; $('#evKickI').value=E.kick; $('#evT1I').value=E.t1; $('#evT2I').value=E.t2; $('#evSubI').value=E.sub; $('#evDateI').value=E.date;
-  $('#evTimeout').value=E.timeout; $('#evPay').checked=E.pay; $('#evGratA').checked=!!E.gratAExtra; $('#evFx').checked=E.fx;
+  $('#evTimeout').value=E.timeout; $('#evPay').checked=E.pay; $('#evGratA').checked=!!E.gratAExtra; $('#evFx').checked=E.fx; $('#evPlaceurs').checked=placeursOn(); renderRelayInfo();
   $('#pW').value=S.plan.w; $('#pH').value=S.plan.h; $('#bgOp').value=S.plan.bgOp; $('#planRestore').hidden=!hasBk7();
 }
 $('#colMap').addEventListener('change',e=>{ S.cols[e.target.dataset.col]=+e.target.value; save(); buildGuests(); renderAdmin(); });
@@ -1388,7 +1454,7 @@ function askCode(){ if(!window.crypto?.subtle){ openAdmin('pSource'); $('#srcUrl
   $('#codeErr').hidden=true; $('#mCode').hidden=false; $('#codeIn').value=''; setTimeout(()=>$('#codeIn').focus(),50); }
 $('#codeOk').onclick=async()=>{ const b=$('#codeOk'), v=$('#codeIn').value; if(!normCode(v)) return $('#codeIn').focus();
   b.disabled=true; b.textContent='Vérification…';
-  try{ const url=await unlockSheet(v); S.src.url=url; S.csv=null; save(); $('#mCode').hidden=true; toast('Code accepté — chargement des réservations…'); await fetchSheet(true); scheduleRefresh(); renderHome(); offerSeven(); }
+  try{ const url=await unlockSheet(v); S.src.url=url; S.csv=null; save(); $('#mCode').hidden=true; toast('Code accepté — chargement des réservations…'); await fetchSheet(true); scheduleRefresh(); renderHome(); connectRelay(); if(S.mode==='placeur'){ if(!S.me) askName(); startHello(); } else offerSeven(); }
   catch(e){ $('#codeErr').hidden=false; const m=$('#mCode .mbox'); m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake'); $('#codeIn').select(); }
   b.disabled=false; b.textContent='Charger les réservations'; };
 $('#codeIn').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#codeOk').click(); } });
@@ -1396,7 +1462,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-18.3';
+const APP_V='2026-10-18.4';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
@@ -1433,9 +1499,125 @@ $('#cfgCopy').onclick=async()=>{
   const url=PUBLIC_URL+'#cfg='+await packCfg(cfg), out=$('#cfgOut'); out.value=url; out.hidden=false; out.select();
   try{ await navigator.clipboard.writeText(url); toast("Lien copié — ouvre-le sur l'ordinateur de l'accueil"); }catch(e){ toast('Copie le lien affiché (Ctrl+C)'); } };
 
+/* ================= Placeurs : l'accueil envoie « qui arrive, combien, quelle table » aux téléphones des placeurs =================
+   Relais : ntfy.sh (gratuit, sans compte). Chaque message est compressé puis chiffré (AES-GCM) avec une clé tirée de
+   l'identifiant du sheet : le relais ne voit que des octets illisibles, seuls les appareils qui ont le code d'accès lisent. */
+let chan=null, es=null, relayState='off', calls=new Map(), seenMsg=new Set(), placeursSeen=new Map(), helloT=null, lastPlanSent=0, lastPlanKey='', pvOpen=null, relayRaf=0, actx=null, pvSig='';
+const placeursOn=()=>S.ev.placeurs!==false;
+const hashStr=t=>{ let h=0; for(let i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))|0; return h; };
+async function getChan(){
+  const id=(String(S.src.url||'').match(/\/d\/(?:e\/)?([\w-]+)/)||[])[1]; if(!id||!window.crypto?.subtle) return null;
+  if(chan&&chan.id===id) return chan; const enc=new TextEncoder();
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode('fondue-topic:'+id)));
+  const base=await crypto.subtle.importKey('raw',enc.encode(id),'PBKDF2',false,['deriveKey']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:enc.encode('fondue-placeurs-v1'),iterations:100000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  return chan={id,key,topic:'fondue'+[...h.slice(0,12)].map(b=>b.toString(16).padStart(2,'0')).join('')}; }
+async function seal(obj){ const c=await getChan(); let data=new TextEncoder().encode(JSON.stringify(obj)), flag=0;
+  if(window.CompressionStream){ const st=new Blob([data]).stream().pipeThrough(new CompressionStream('deflate-raw')); data=new Uint8Array(await new Response(st).arrayBuffer()); flag=1; }
+  const iv=crypto.getRandomValues(new Uint8Array(12)), ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},c.key,data)), out=new Uint8Array(13+ct.length);
+  out[0]=flag; out.set(iv,1); out.set(ct,13); return b64u.enc(out); }
+async function unseal(str){ const c=await getChan(), all=b64u.dec(str.trim());
+  let data=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:all.slice(1,13)},c.key,all.slice(13)));
+  if(all[0]===1){ const st=new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw')); data=new Uint8Array(await new Response(st).arrayBuffer()); }
+  return JSON.parse(new TextDecoder().decode(data)); }
+async function relaySend(obj){ const c=await getChan(); if(!c) return false;
+  try{ const r=await fetch('https://ntfy.sh/'+c.topic,{method:'POST',body:await seal({...obj,ts:Date.now()})}); return r.ok; }catch(e){ return false; } }
+function setRelay(st){ if(relayState===st) return; relayState=st; scheduleRelayRender(); }
+async function connectRelay(){
+  if(!placeursOn()&&S.mode!=='placeur'){ if(es){ es.close(); es=null; } setRelay('off'); return; }
+  const c=await getChan(); if(!c){ setRelay('off'); return; } if(es&&es._t===c.topic){ return; } if(es) es.close();
+  es=new EventSource(`https://ntfy.sh/${c.topic}/sse?since=6h`); es._t=c.topic; setRelay('wait');
+  es.onopen=()=>setRelay('ok'); es.onerror=()=>setRelay('err');
+  es.onmessage=async ev=>{ let d; try{ d=JSON.parse(ev.data); }catch(e){ return; } if(d.event!=='message'||seenMsg.has(d.id)) return; seenMsg.add(d.id); setRelay('ok');
+    let body=d.message; if(d.attachment?.url&&(!body||body.length<20)){ try{ body=await (await fetch(d.attachment.url)).text(); }catch(e){ return; } }
+    let m; try{ m=await unseal(body); }catch(e){ return; } onRelay(m); };
+  if(S.mode==='placeur') startHello(); else publishPlan(true); } // nouvelle connexion : on (re)publie le plan pour les placeurs
+function onRelay(m){
+  if(m.t==='call'){ if(!calls.has(m.id)){ calls.set(m.id,{...m,status:'wait',by:null}); if(S.mode==='placeur'&&Date.now()-m.ts<120000) alertNew(m); } }
+  else if(m.t==='claim'){ const c=calls.get(m.id); if(c&&c.status!=='done'){ c.status='claimed'; c.by=m.by; } }
+  else if(m.t==='unclaim'){ const c=calls.get(m.id); if(c&&c.status==='claimed'&&c.by===m.by){ c.status='wait'; c.by=null; } }
+  else if(m.t==='done'){ const c=calls.get(m.id); if(c){ c.status='done'; c.by=m.by||c.by; } }
+  else if(m.t==='hello'){ placeursSeen.set(m.by,m.ts); if(S.mode!=='placeur'&&Date.now()-lastPlanSent>5*60e3) publishPlan(true); }
+  else if(m.t==='plan'){ if(!S.pvPlanTs||m.ts>S.pvPlanTs){ S.pvPlan=m.plan; S.pvPlanTs=m.ts; if(S.mode==='placeur') save(); } }
+  scheduleRelayRender(); }
+async function publishPlan(force){ if(S.mode==='placeur'||!placeursOn()) return; const p={...S.plan,bg:null}, js=JSON.stringify(p), key=js.length+':'+hashStr(js);
+  if(!force&&key===lastPlanKey&&Date.now()-lastPlanSent<30*60e3) return; lastPlanKey=key; lastPlanSent=Date.now(); return relaySend({t:'plan',plan:p}); }
+function startHello(){ const hi=()=>relaySend({t:'hello',by:S.me||'placeur'}); hi(); clearInterval(helloT); helloT=setInterval(()=>{ if(!document.hidden) hi(); },90e3); }
+function callPlaceur(g,count,manual){
+  if(!placeursOn()) return manual&&toast('Placeurs désactivés (Réglages → Soirée)');
+  if(!S.src.url) return manual&&toast("Placeurs : branche d'abord le Google Sheet");
+  const id=uid(), m={t:'call',id,key:g.key,name:`${g.nom.toUpperCase()} ${g.pre}`.trim(),n:count,size:g.size||1,tables:g.tables.map(t=>t.label),tids:g.tables.map(t=>t.id).filter(Boolean),note:g.note||''};
+  calls.set(id,{...m,ts:Date.now(),status:'wait',by:null}); scheduleRelayRender();
+  relaySend(m).then(ok=>toast(ok?`Envoyé aux placeurs : ${m.name} → table ${m.tables.join(' · ')||'?'}`:'Placeurs : envoi impossible (connexion ?)')); }
+function beep(){ if(!S.pvSound) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); [0,.18].forEach((d,i)=>{ const o=actx.createOscillator(), g=actx.createGain(), t0=actx.currentTime+d;
+  o.type='sine'; o.frequency.value=i?1175:880; g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(.35,t0+.02); g.gain.exponentialRampToValueAtTime(.0001,t0+.32); o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0+.35); }); }catch(e){} }
+function alertNew(m){ try{ navigator.vibrate&&navigator.vibrate([180,80,180]); }catch(e){} beep(); toast(`Nouvelle arrivée : ${m.name} → table ${m.tables.join(' · ')||'?'}`); }
+function askName(){ const v=prompt('Ton prénom (il s\'affiche chez les autres placeurs et à l\'accueil) :',S.me||''); if(v&&v.trim()){ S.me=v.trim().slice(0,20); save(); if(S.mode==='placeur') startHello(); } }
+const stBadge=c=>c.status==='done'?`<span class="st done">placé${c.by?' · '+esc(c.by):''}</span>`:c.status==='claimed'?`<span class="st claimed">${esc(c.by)} y va</span>`:'<span class="st wait">en attente</span>';
+function scheduleRelayRender(){ if(relayRaf) return; relayRaf=requestAnimationFrame(()=>{ relayRaf=0; renderQueue(); updRPlaceur(); renderRelayInfo(); if(S.mode==='placeur') renderPV(); }); }
+function onlinePlaceurs(){ return [...placeursSeen].filter(([,t])=>Date.now()-t<4*60e3).map(([n])=>n); }
+function renderQueue(){ const q=$('#queue'), all=[...calls.values()].sort((a,b)=>b.ts-a.ts).slice(0,8), on=onlinePlaceurs();
+  q.hidden=S.mode==='placeur'||!placeursOn()||(!all.length&&!on.length);
+  q.innerHTML=`<h4><span>Placeurs</span><span class="pvst ${relayState==='ok'?'ok':relayState==='err'?'err':''}">${on.length?`${on.length} en ligne : ${esc(on.join(', '))}`:relayState==='ok'?'aucun placeur en ligne':'relais hors ligne'}</span></h4>`
+    +all.map(c=>`<div class="qi"><b>${esc(c.name)}</b><span>T ${esc(c.tables.join('·')||'?')}</span>${stBadge(c)}</div>`).join('');
+  const w=[...calls.values()].filter(c=>c.status==='wait').length, bd=$('#pvBadge'); bd.hidden=!w; bd.textContent=w; }
+function updRPlaceur(){ const el=$('#rPlaceur'); if(!cur||!el){ return; } const c=[...calls.values()].filter(x=>x.key===cur.key).sort((a,b)=>b.ts-a.ts)[0];
+  el.textContent=!c?'':c.status==='done'?`✓ Placé${c.by?' par '+c.by:''}`:c.status==='claimed'?`${c.by} accompagne le groupe`:'Placeurs prévenus — en attente…'; $('#rCall').hidden=!placeursOn(); }
+function renderRelayInfo(){ const el=$('#relayInfo'); if(!el) return; const on=onlinePlaceurs();
+  el.className='status'+(relayState==='ok'?' ok':relayState==='err'?' err':'');
+  el.textContent=!S.src.url?"Branche d'abord le Google Sheet (code d'accès).":!placeursOn()?'Désactivé.':relayState==='ok'?`Relais connecté · ${on.length?on.length+' placeur(s) en ligne : '+on.join(', '):'aucun placeur en ligne pour l\'instant'}`:relayState==='err'?'Relais hors ligne — nouvelle tentative automatique…':'Connexion au relais…'; }
+function renderPV(force){
+  const st=$('#pvState'); st.className='pvst'+(relayState==='ok'?' ok':relayState==='err'?' err':'');
+  st.textContent={ok:'connecté',err:'hors ligne — reconnexion…',wait:'connexion…',off:"code d'accès requis"}[relayState]||'';
+  $('#pvName').textContent=S.me?`Placeur : ${S.me}`:'Mon prénom'; $('#pvSound').textContent=S.pvSound?'Son activé':'Activer le son'; $('#pvSound').classList.toggle('on',!!S.pvSound);
+  const all=[...calls.values()].sort((a,b)=>b.ts-a.ts), act=all.filter(c=>c.status!=='done'), done=all.filter(c=>c.status==='done').slice(0,15);
+  if(!pvOpen||!calls.has(pvOpen)||calls.get(pvOpen).status==='done'){ const f=act.find(c=>c.status==='claimed'&&c.by===S.me)||act.find(c=>c.status==='wait'); pvOpen=f?f.id:null; }
+  const sig=JSON.stringify([act.map(c=>[c.id,c.status,c.by]),done.map(c=>c.id),pvOpen,S.me,!!S.pvPlan]); if(!force&&sig===pvSig) return; pvSig=sig;
+  const list=$('#pvList');
+  if(!act.length&&!done.length){ list.innerHTML=`<div class="pvempty"><b>En attente d'arrivées</b>Dès que l'accueil pointe quelqu'un, il apparaît ici avec sa table et le chemin à suivre.</div>`; return; }
+  list.innerHTML=act.map(pcHTML).join('')+(done.length?`<div class="pvdone"><h4>Déjà placés</h4>${done.map(c=>`<div class="qi"><b>${esc(c.name)}</b><span>Table ${esc(c.tables.join(' · ')||'?')}</span>${stBadge(c)}</div>`).join('')}</div>`:'');
+  const box=pvOpen&&list.querySelector(`.pc[data-id="${CSS.escape(pvOpen)}"] .pc-plan`); if(box) drawPcPlan(box,calls.get(pvOpen)); }
+function pcHTML(c){ const mine=c.status==='claimed'&&c.by===S.me, other=c.status==='claimed'&&!mine, open=c.id===pvOpen, tl=c.tables.join(' · '), hasPlan=!!(c.tids?.length&&(S.pvPlan||S.mode!=='placeur'));
+  return `<article class="pc${c.status==='wait'?' wait':''}${mine?' mine':''}${other?' other':''}" data-id="${esc(c.id)}">
+    <div class="pc-top"><div class="pc-name">${esc(c.name)}</div><div class="pc-t"><small>Table</small><b>${esc(tl||'?')}</b></div></div>
+    <div class="pc-meta">${c.n} personne${c.n>1?'s':''} ${c.n<c.size?`arrive${c.n>1?'nt':''} (sur ${c.size})`:'à placer'} · pointé à ${new Date(c.ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}${c.note?`<span class="note">${esc(c.note)}</span>`:''}</div>
+    ${open&&hasPlan?'<div class="pc-plan"></div>':''}
+    <div class="pc-act">${c.status==='wait'?`<button class="btn gold" data-a="claim">Je m'en occupe</button>`:mine?`<button class="btn go" data-a="done">${CK}Placés</button><button class="btn ghost sm" data-a="unclaim">Je laisse</button>`:`<span class="who">Pris par ${esc(c.by)}</span>`}${!open&&hasPlan?'<button class="btn ghost sm" data-a="open">Voir le plan</button>':''}</div></article>`; }
+function drawPcPlan(box,c){ const p=S.mode==='placeur'?S.pvPlan:S.plan; if(!p||!c) return;
+  box.innerHTML='<svg role="img" aria-label="Chemin vers la table"></svg>'; const svg=box.firstChild, old=S.plan; S.plan=p;
+  try{ const ts=c.tids.map(id=>p.tables.find(t=>t.id===id)).filter(Boolean); if(!ts.length){ box.remove(); return; }
+    routeInfo=null; const route=routeTo(ts[0]), rd=routeInfo?.dur||1.4; box.style.setProperty('--rd',rd+'s'); box.style.setProperty('--arr',(.7+rd).toFixed(2)+'s');
+    renderPlan(svg,{hit:new Set(ts.map(t=>t.id)),you:true,dim:true,route});
+    const pts=[...(routeInfo?.pts||[]),...ts.map(t=>({x:t.x,y:t.y}))]; let x0=Math.min(...pts.map(q=>q.x))-130, x1=Math.max(...pts.map(q=>q.x))+130, y0=Math.min(...pts.map(q=>q.y))-130, y1=Math.max(...pts.map(q=>q.y))+70;
+    let w=x1-x0, h=y1-y0; const ar=16/11; if(w/h<ar){ const nw=h*ar; x0-=(nw-w)/2; w=nw; } else { const nh=w/ar; y0-=(nh-h)/2; h=nh; }
+    svg.setAttribute('viewBox',`${x0} ${y0} ${w} ${h}`);
+    setTimeout(()=>{ const g=svg.querySelector('.traveler-g'), mo=svg.querySelector('#travel'); if(g&&mo&&svg.isConnected){ g.style.opacity=1; try{ mo.beginElement(); }catch(e){} } },700);
+  }finally{ S.plan=old; } }
+$('#pvList').addEventListener('click',e=>{ const card=e.target.closest('.pc'); if(!card) return; const id=card.dataset.id, c=calls.get(id); if(!c) return; const b=e.target.closest('button[data-a]');
+  if(!b||b.dataset.a==='open'){ if(pvOpen!==id){ pvOpen=id; renderPV(true); } return; }
+  if(!S.me){ askName(); if(!S.me) return; }
+  const a=b.dataset.a;
+  if(a==='claim'){ c.status='claimed'; c.by=S.me; pvOpen=id; renderPV(true); relaySend({t:'claim',id,by:S.me}); }
+  else if(a==='unclaim'){ c.status='wait'; c.by=null; renderPV(true); relaySend({t:'unclaim',id,by:S.me}); }
+  else if(a==='done'){ const r=b.getBoundingClientRect(); c.status='done'; c.by=S.me; renderPV(true); relaySend({t:'done',id,by:S.me}); if(S.ev.fx) burst(r.left+r.width/2,r.top,34,'#22C55E'); }
+  scheduleRelayRender(); });
+$('#pvName').onclick=askName;
+$('#pvSound').onclick=()=>{ S.pvSound=!S.pvSound; save(); if(S.pvSound){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); }catch(e){} beep(); } renderPV(true); };
+function setMode(m){ S.mode=m==='placeur'?'placeur':'accueil'; save(); const pl=S.mode==='placeur';
+  document.querySelectorAll('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
+  $('.home').hidden=pl; $('#pv').hidden=!pl;
+  if(pl){ if(S.src.url&&!S.me) askName(); connectRelay().then(()=>{ if(es) startHello(); }); renderPV(true); }
+  else { connectRelay(); renderHome(); $('#q').focus(); }
+  scheduleRelayRender(); }
+$('#modeSw').addEventListener('click',e=>{ const b=e.target.closest('button[data-m]'); if(b) setMode(b.dataset.m); });
+$('#evPlaceurs').onchange=e=>{ S.ev.placeurs=e.target.checked; save(); connectRelay(); scheduleRelayRender(); };
+$('#planSend').onclick=()=>publishPlan(true).then(ok=>toast(ok?'Plan envoyé aux placeurs':'Envoi impossible (sheet ou connexion ?)'));
+setInterval(scheduleRelayRender,60e3); // rafraîchit « placeurs en ligne »
+
 /* ================= Démarrage ================= */
-buildGuests(); applyEv(); renderHome(); $('#q').focus();
-applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else offerSeven(); });
+if(new URLSearchParams(location.search).has('placeur')) S.mode='placeur';
+buildGuests(); applyEv(); renderHome(); $('#q').focus(); setMode(S.mode);
+applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else { connectRelay(); if(S.mode!=='placeur') offerSeven(); } });
 addEventListener('hashchange',()=>applyHash()); // lien d'accès ouvert alors que l'app est déjà affichée
 </script>
 </body>
