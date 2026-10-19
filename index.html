@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Accueil Fondue</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -12,8 +12,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Fondue">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Kaushan+Script&family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/kaushanscript-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
 <style>
 :root{
   /* DA « Fondue Suisse » : nuit alpine, guirlandes, bois, rouge suisse, or */
@@ -30,6 +32,7 @@
   --floor:rgba(8,10,31,.5); --tbl:#5A381F; --tbl-line:#9A6A40; --chair:#2E2B57; --chair-occ:#6F69A8; --zone:rgba(255,246,230,.04); --zone-line:rgba(255,246,230,.18);
 }
 *{box-sizing:border-box}
+html{background:#0B0D24}
 html,body{margin:0;height:100%;overflow:hidden}
 body{background:radial-gradient(120% 85% at 50% -5%,#3A2C7E 0%,#1C1A4A 35%,var(--night-1) 62%,var(--night-0) 100%);color:var(--ink);font-family:Manrope,system-ui,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .anton{font-family:Anton,Impact,sans-serif;font-weight:400;letter-spacing:.01em}
@@ -41,9 +44,9 @@ button{font:inherit;cursor:pointer;color:inherit}
 /* ---------- Décor : montagnes, guirlande, neige ---------- */
 .mountains{position:fixed;left:0;right:0;bottom:0;height:42vh;z-index:0;pointer-events:none;opacity:.75}
 .mountains svg{width:100%;height:100%;display:block}
-#garland{position:fixed;left:0;top:0;width:100%;height:50px;z-index:5;pointer-events:none;overflow:visible}
+#garland{position:fixed;left:0;top:env(safe-area-inset-top,0px);width:100%;height:50px;z-index:5;pointer-events:none;overflow:visible}
 #garland .wire{fill:none;stroke:#1A1208;stroke-width:2}
-#bulbs{position:fixed;inset:0 0 auto 0;height:60px;z-index:5;pointer-events:none}
+#bulbs{position:fixed;inset:env(safe-area-inset-top,0px) 0 auto 0;height:60px;z-index:5;pointer-events:none}
 .bulb{position:absolute;width:10px;height:12px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:radial-gradient(circle at 50% 40%,#FFFBEA 0,#FFD98A 40%,#FFB547 75%);box-shadow:0 0 10px 3px rgba(255,190,80,.7),0 0 26px 8px rgba(255,160,60,.28);animation:twinkle 3.2s ease-in-out infinite;will-change:opacity}
 #garland .cap{fill:#2A1E10}
 @keyframes twinkle{0%,100%{opacity:1}45%{opacity:.55}55%{opacity:.95}}
@@ -51,7 +54,7 @@ button{font:inherit;cursor:pointer;color:inherit}
 
 /* ---------- Layout ---------- */
 .app{position:relative;z-index:1;height:100vh;display:grid;grid-template-rows:auto 1fr}
-header{position:relative;display:flex;align-items:center;gap:18px;padding:46px 28px 14px}
+header{position:relative;display:flex;align-items:center;gap:18px;padding:calc(46px + env(safe-area-inset-top,0px)) 28px 14px}
 .crest{width:92px;height:92px;flex:none;display:grid;place-items:center;margin:-14px -4px -14px 0}
 .crest img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.55)) drop-shadow(0 0 20px rgba(255,201,60,.22))}
 .crest .cross{width:30px;height:30px;position:relative}
@@ -395,6 +398,23 @@ table.data th{color:var(--muted);font-weight:800;font-size:11px;text-transform:u
 .chk{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:10px}
 input[type=range]{width:100%;accent-color:var(--gold)}
 
+@media (max-width:700px){
+  html,body{height:auto;min-height:100%;overflow-x:hidden}
+  header{padding:calc(40px + env(safe-area-inset-top,0px)) 14px 8px!important}
+  .home{padding:6px 12px calc(24px + env(safe-area-inset-bottom,0px));gap:14px}
+  .search input{font-size:20px;padding:15px 48px 15px 52px;border-radius:18px}.search .mag{left:16px;width:24px;height:24px}
+  .hint{display:none}.letters{grid-template-columns:repeat(9,1fr);gap:4px}.letters button{height:34px;font-size:15px}
+  .list{max-height:58vh}.guest{padding:10px 12px;gap:10px}.gname{font-size:17px}.av{width:38px;height:38px;font-size:15px}.chip{min-width:54px;padding:3px 8px}.chip b{font-size:21px}
+  .plancard{height:auto!important}.planbody{padding:6px}.planbody svg{height:auto}.planhead{padding:12px 12px 0}.legend{margin-left:0;flex-wrap:wrap;gap:6px 10px;font-size:10px}
+  .ov{padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(20px + env(safe-area-inset-bottom,0px));gap:14px;align-content:start}
+  .rcrest{width:58px;height:58px}.welcome{font-size:32px}.who{font-size:34px}.ppl{font-size:16px}.meal{font-size:12px;margin:4px 6px 0 0}
+  .tbox{margin:10px 0 6px;padding:14px 64px 12px 22px;border-radius:20px}.tbox .num{font-size:92px}.tbox.multi .num{font-size:70px}.tbox::before{width:22px;height:22px;right:14px;bottom:14px;background-size:8px 22px,22px 8px}
+  .note{font-size:20px}.acts{margin-top:10px}.btn{min-height:50px;font-size:16px;padding:12px 16px}.bigplan{min-height:44vh;border-radius:20px}
+  .adm header{padding:calc(14px + env(safe-area-inset-top,0px)) 14px 12px!important}.tabs{flex-wrap:nowrap;overflow-x:auto;padding:10px 14px}.tabs button{white-space:nowrap}.panel{padding:8px 12px 30px}
+  .pv{padding:4px 12px calc(40px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(20px + env(safe-area-inset-bottom,0px));max-width:92vw;text-align:center}
+  .mbox{padding:20px}
+}
 @media (max-width:1100px){
   html,body{overflow:auto}.app{height:auto}
   .home{grid-template-columns:1fr}.plancard{height:60vh}.kpis .kpi:nth-child(n+2){display:none}.datepill{display:none}
@@ -1491,7 +1511,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.5';
+const APP_V='2026-10-19.6';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
