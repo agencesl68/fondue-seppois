@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Accueil Fondue</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#111437">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fondue">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Kaushan+Script&family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1480,7 +1488,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.2';
+const APP_V='2026-10-19.3';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
