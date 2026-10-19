@@ -506,7 +506,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <div class="planhead">
         <h2>Plan de la salle</h2>
         <div class="legend"><span><i style="background:var(--red);box-shadow:0 0 0 1px var(--gold)"></i>Recherche</span><span><i style="background:var(--chair-occ)"></i>Place attribuée</span><span><i style="background:#2F8F55"></i>Table occupée</span><span><i style="background:#E88EA0"></i>Jambon</span><span><i style="background:#7DD3FC"></i>Chaise en plus</span><span><i style="background:#4ADE80"></i>Arrivé</span><span><i style="background:var(--chair)"></i>Libre</span></div>
-        <button class="btn ghost sm" id="editPlanBtn">Modifier le plan</button>
+        <button class="btn ghost sm" id="demoBtn" title="Place quelques réservations sur des tables pour faire une simulation">Démo</button><button class="btn ghost sm" id="editPlanBtn">Modifier le plan</button>
       </div>
       <div class="planbody"><svg id="homePlan" role="img" aria-label="Plan de la salle"></svg></div>
       <div class="matchinfo" id="matchInfo"></div>
@@ -1182,8 +1182,7 @@ function updArrive(bump){ const N=cur.size||1, a=arrOf(cur), n=a?.n||0, left=N-n
   const inf=$('#rArrInfo'); inf.className='arrinfo'+(n&&n<N?' part':n>=N?' ok':'');
   inf.textContent=d!==n?`${d} arrivé${d>1?'s':''} — appuie sur « Valider » pour enregistrer${d>n?' et prévenir les placeurs':''}`:!n?'Seulement une partie du groupe ? Ajuste avec − / + (ou tape le nombre) puis valide.':n<N?`${n} arrivé${n>1?'s':''} (dès ${a.t}) · ${left} attendu${left>1?'s':''} plus tard`:`Tout le groupe est là · ${a.last&&a.last!==a.t?`premiers à ${a.t}, complet à ${a.last}`:`arrivé à ${a.t}`}`;
   if(bump){ const c=$('#rCount'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); } }
-function setArrUI(n){ if(S.demoBk&&(arrOf(cur)?.n||0)<n){ setArr(cur,Math.min(n,cur.size||1)); draftN=Math.min(n,cur.size||1); updArrive(true); updKpis(); replayRoute(); toast('Démo : arrivée simulée (rien n\'est envoyé aux placeurs)'); return; }
- const N=cur.size||1, before=arrOf(cur)?.n||0; n=Math.max(0,Math.min(N,n)); draftN=n; if(n===before){ updArrive(); return; }
+function setArrUI(n){ const N=cur.size||1, before=arrOf(cur)?.n||0; n=Math.max(0,Math.min(N,n)); draftN=n; if(n===before){ updArrive(); return; }
   setArr(cur,n); updArrive(true); updKpis(); armTimer();
   if(n>before){ callPlaceur(cur,n-before); replayRoute(); }
   if(n>=N&&before<N){ toast(`✓ ${cur.display} — groupe complet`); if(S.ev.fx){ const r=$('#rCount').getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,40,'#22C55E'); } }
@@ -1297,14 +1296,14 @@ function startDemo(){
   const ts=[...S.plan.tables].sort((a,b)=>(parseInt(a.label)||1e9)-(parseInt(b.label)||1e9)); let k=Math.floor(ts.length*.15);
   const free=()=>{ while(k<ts.length&&Object.values(S.assign).some(v=>parseTables(v).includes(String(ts[k].label)))) k++; return ts[k++]; };
   const place=g=>{ const need=Math.max(1,Math.ceil((g.size+(g.extraAuto||0))/12)), lab=[]; for(let i=0;i<need;i++){ const t=free(); if(t) lab.push(t.label); k+=1; } if(lab.length) S.assign[g.key]=lab.join(', '); };
-  const ham=guests.filter(g=>g.jambon>0&&!g.fromSheet).slice(0,3), plain=guests.filter(g=>!g.jambon&&!g.fromSheet&&g.size<=12).slice(0,4);
+  const ham=guests.filter(g=>g.jambon>0&&!g.fromSheet&&!g.tables.length).slice(0,4), plain=guests.filter(g=>!g.jambon&&!g.fromSheet&&!g.tables.length&&g.size<=12).slice(0,6);
   [...ham,...plain].forEach(place);
-  const now2=now(); [ham[0],plain[0]].filter(Boolean).forEach(g=>S.arrived[g.key]={n:g.size,t:now2,last:now2});
-  if(plain[1]) S.arrived[plain[1].key]={n:Math.max(1,Math.ceil(plain[1].size/2)),t:now2,last:now2};
   save(); computeSeats(); renderHome(); if($('#adm').classList.contains('show')) renderAdmin(); renderDemoBar();
-  toast(`Démo : ${ham.length+plain.length} réservations placées (${ham.length} avec jambon). Cherche « ${(ham[0]||plain[0]).nom} » pour voir l'itinéraire`); }
-function stopDemo(){ if(!S.demoBk) return; S.assign=S.demoBk.assign||{}; S.arrived=S.demoBk.arrived||{}; S.extra=S.demoBk.extra||{}; delete S.demoBk; save(); computeSeats(); renderHome(); if($('#adm').classList.contains('show')) renderAdmin(); renderDemoBar(); toast('Démo arrêtée — tout est revenu comme avant'); }
-function renderDemoBar(){ if(DEMO) return; $('#demoBar').hidden=!S.demoBk; $('#demoStart').textContent=S.demoBk?'Arrêter la démo':'Lancer une démo'; }
+  computeSeats(); $('#demoBar').innerHTML=`<b>Mode démo</b> — tables inventées pour : ${[...ham,...plain].filter(g=>g.tables.length).map(g=>`<b>${esc(g.nom)}</b>${g.jambon?' (jambon)':''} → ${esc(tLabel(g))}`).join(' · ')}. Valide des arrivées et envoie aux placeurs comme le jour J. <button class="btn ghost sm" id="demoStop" style="margin-left:8px">Arrêter la démo</button>`; $('#demoStop').onclick=stopDemo;
+  toast(`Démo : ${ham.length+plain.length} réservations placées (${ham.length} avec jambon)`); }
+function stopDemo(){ if(!S.demoBk) return; S.assign=S.demoBk.assign||{}; S.arrived=S.demoBk.arrived||{}; S.extra=S.demoBk.extra||{}; delete S.demoBk; S.resetTs=Date.now(); calls.clear(); relaySend({t:'reset'}); save(); scheduleRelayRender(); computeSeats(); renderHome(); if($('#adm').classList.contains('show')) renderAdmin(); renderDemoBar(); toast('Démo arrêtée — tout est revenu comme avant'); }
+function renderDemoBar(){ if(DEMO) return; $('#demoBar').hidden=!S.demoBk; const t=S.demoBk?'Arrêter la démo':'Lancer une démo'; $('#demoStart').textContent=t; $('#demoBtn').textContent=S.demoBk?'Arrêter la démo':'Démo'; $('#demoBtn').classList.toggle('on',!!S.demoBk); }
+$('#demoBtn').onclick=()=>S.demoBk?stopDemo():startDemo();
 $('#demoStart').onclick=()=>S.demoBk?stopDemo():startDemo();
 $('#demoStop').onclick=stopDemo;
 function resetPlacements(){ S.assign={}; S.extra={}; S.reset1=true; save(); computeSeats(); renderHome(); if($('#adm').classList.contains('show')) renderAdmin(); toast('Placements remis à zéro (le sheet n\'est pas modifié)'); }
@@ -1568,7 +1567,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.9';
+const APP_V='2026-10-19.10';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) { const q=new URLSearchParams(location.search); q.set('v',m[1]); location.replace(location.pathname+'?'+q.toString()+location.hash); } }catch(e){} })();
