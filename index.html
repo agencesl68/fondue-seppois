@@ -1552,7 +1552,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.7';
+const APP_V='2026-10-19.8';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
@@ -1742,6 +1742,10 @@ setInterval(scheduleRelayRender,60e3); // rafraîchit « placeurs en ligne »
 if(new URLSearchParams(location.search).has('placeur')) S.mode='placeur';
 buildGuests(); applyEv(); renderHome(); $('#q').focus(); setMode(S.mode); renderDemoBar();
 applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else { connectRelay(); if(S.mode!=='placeur') offerSeven(); }
+  if(!S.reset3&&S.mode!=='placeur') setTimeout(()=>{ if(S.reset3) return; S.reset3=true; S.reset2=true; S.reset1=true; save();
+    const a=Object.keys(S.assign||{}).length, r=Object.keys(S.arrived||{}).length, c=calls.size;
+    if((a||r||c||S.demoBk)&&confirm(`Tout remettre à zéro ?\n• placements : ${a}\n• arrivées : ${r}\n• file des placeurs : ${c}${S.demoBk?'\n• la démo sera arrêtée':''}\n\nLe plan de salle et le Google Sheet ne sont pas touchés.`)){
+      delete S.demoBk; S.assign={}; S.extra={}; save(); resetSoiree(); renderDemoBar(); toast('Tout est remis à zéro'); } },4000);
   if(!S.reset2&&S.mode!=='placeur') setTimeout(()=>{ if(S.reset2) return; const a=Object.keys(S.arrived||{}).length, c=calls.size; S.reset2=true; save();
     if((a||c)&&confirm(`Remettre à zéro les arrivées (${a}) et la file des placeurs (${c}) ?`)) resetSoiree(); },4000);
   if(!S.reset1){ const n=Object.keys(S.assign||{}).length; if(n&&S.mode!=='placeur'&&confirm(`Remettre les placements à zéro ? (${n} réservation${n>1?'s':''} placée${n>1?'s':''} sur cet ordinateur)\nLe plan de salle, les arrivées et le Google Sheet ne sont pas touchés.`)) resetPlacements(); else { S.reset1=true; save(); } } });
