@@ -656,7 +656,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 
   <div class="panel narrow" id="pRecap">
     <div class="card">
-      <div class="row"><div><h3>Récap par table — fondues et jambons</h3><p>Calculé depuis le sheet (colonnes Adultes, -12 ans, Jambons) et le placement. Les enfants de moins de 6 ans gratuits ont leur chaise : ils comptent dans les places mais pas dans les fondues ni les jambons. Les gratuits adultes sont ajoutés en plus (chaise + fondue) — réglable dans Soirée. Les chaises / places en plus demandées dans les remarques (chaise supp, poussette…) comptent dans les places ; corrigeables dans Placement. Pour un groupe réparti sur plusieurs tables, jambons et enfants sont répartis au prorata.</p></div><div style="flex:0"><button class="btn gold sm" id="recapPrint">Imprimer pour la cuisine</button></div></div>
+      <div class="row"><div><h3>Récap par table — fondues et jambons</h3><p>Calculé depuis le sheet (colonnes Adultes, -12 ans, Jambons) et le placement. Les enfants de moins de 6 ans gratuits ont leur chaise : ils comptent dans les places mais pas dans les fondues ni les jambons. Les gratuits adultes font partie des adultes (comme dans le sheet) — réglable dans Soirée. Les chaises / places en plus demandées dans les remarques (chaise supp, poussette…) comptent dans les places ; corrigeables dans Placement. Pour un groupe réparti sur plusieurs tables, jambons et enfants sont répartis au prorata.</p></div><div style="flex:0"><button class="btn gold sm" id="recapPrint">Imprimer pour la cuisine</button></div></div>
       <div class="kpirow" id="recapTot"></div>
       <div style="overflow:auto"><table class="data" id="recapTbl"></table></div>
     </div>
@@ -702,7 +702,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <h3>Accueil</h3>
       <div class="row"><div style="max-width:260px"><label class="f" for="evTimeout">Retour auto à l'accueil</label><select class="fi" id="evTimeout"><option value="0">Jamais</option><option value="20">20 s</option><option value="30">30 s</option><option value="60">60 s</option></select></div></div>
       <label class="chk"><input type="checkbox" id="evPay"> Afficher les paiements en attente sur la fiche</label>
-      <label class="chk"><input type="checkbox" id="evGratA"> Les « gratuits adultes » du sheet viennent <b>en plus</b> des adultes (une chaise et une fondue chacun) — décocher s'ils sont déjà comptés dans « Adultes »</label>
+      <label class="chk"><input type="checkbox" id="evGratA"> Les « gratuits adultes » du sheet viennent <b>en plus</b> des adultes (une chaise et une fondue chacun). Laisser décoché : dans le sheet ils font déjà partie de « Adultes »</label>
       <label class="chk"><input type="checkbox" id="evFx"> Effets (neige, étincelles, guirlande)</label>
     </div>
     <div class="card">
@@ -789,8 +789,9 @@ let S=load();
 function load(){
   let s={}; try{ s=JSON.parse(localStorage.getItem(LS))||{}; }catch(e){}
   const d={ src:{url:SHEET,refresh:60}, cols:{}, csv:null, plan:defaultPlan(), assign:{}, arrived:{}, extra:{},
-    ev:{kick:'Repas dansant', t1:'Fondue', t2:'Suisse', sub:"Amicale des Sapeurs-Pompiers de Seppois-le-Bas", date:'Samedi 24 octobre 2026 · Salle polyvalente', timeout:30, pay:true, fx:true, logo:null, gratAExtra:true, placeurs:true}};
+    ev:{kick:'Repas dansant', t1:'Fondue', t2:'Suisse', sub:"Amicale des Sapeurs-Pompiers de Seppois-le-Bas", date:'Samedi 24 octobre 2026 · Salle polyvalente', timeout:30, pay:true, fx:true, logo:null, gratAExtra:false, placeurs:true}};
   const o=Object.assign(d,s); o.extra=o.extra||{};
+  if(!o.fixGA){ o.ev.gratAExtra=false; o.fixGA=true; } // d'après le sheet, les « gratuits adultes » font partie des Adultes (ex. 3 adultes dont 3 gratuits) : ils ne s'ajoutent pas
   if(DEMO){ if(!s.csv){ o.csv=DEMO_CSV; const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); o.arrived={'bernard|julien':{n:6,t,last:t},'leroy|sophie':{n:8,t,last:t},'durand|nicolas':{n:9,t,last:t}}; }
     o.src={url:'',refresh:0}; o.reset1=o.reset2=o.reset3=o.done7=true; o.ev.kick='Démo · Repas dansant'; }
   if(typeof o.csv==='string'&&/^Table n°,Noms,Prénoms,Total,Infos supplémentaires\r?\n3,Muller,Jean/.test(o.csv)){ o.csv=null; o.demo=true; } // anciennes réservations d'exemple o.ev=Object.assign(d.ev,s.ev||{}); o.plan=Object.assign({w:1800,h:1100,bgOp:.5},o.plan);
@@ -899,7 +900,7 @@ function setArr(g,n,remote){ if(!n) delete S.arrived[g.key]; else { const a=arrO
   if(!remote&&!DEMO_LOCAL()) relaySend({t:'arr',key:g.key,n:n||0,at:S.arrived[g.key]?.t||null}); }
 const DEMO_LOCAL=()=>false;
 const tLabel=g=>g.tables.map(t=>t.label).join(' · ');
-const unpaid=g=>S.ev.pay&&g.statut&&!/^pay/.test(norm(g.statut));
+const unpaid=g=>S.ev.pay&&/attente|impay|non pay|a payer|relance/.test(norm(g.statut)); // seulement « En attente » : les erreurs du sheet (#VALUE!…) ne déclenchent rien
 
 /* ================= Lecture du Google Sheet ================= */
 function csvUrl(u){
@@ -1574,7 +1575,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.13';
+const APP_V='2026-10-20.1';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) { const q=new URLSearchParams(location.search); q.set('v',m[1]); location.replace(location.pathname+'?'+q.toString()+location.hash); } }catch(e){} })();
