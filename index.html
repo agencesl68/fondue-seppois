@@ -395,6 +395,22 @@ table.data th{color:var(--muted);font-weight:800;font-size:11px;text-transform:u
   .pv{padding:4px 12px 60px} .pc{padding:12px} .pc-name{font-size:24px} .pc-t b{font-size:30px}
 }
 .app{grid-template-columns:minmax(0,1fr)}
+.alertov{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px));animation:alFlash .32s steps(1) 0s 10;background:#0B0D24}
+@keyframes alFlash{0%{background:#D7141A}50%{background:#FFC93C}}
+.albox{width:100%;max-width:520px;text-align:center;background:rgba(10,12,40,.96);border:3px solid var(--gold);border-radius:28px;padding:26px 20px;box-shadow:0 0 80px rgba(255,201,60,.6);animation:alPop .5s var(--ease)}
+@keyframes alPop{from{transform:scale(.7);opacity:0}}
+.al-k{font:400 22px Anton;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);animation:alBlink .6s ease-in-out infinite alternate}
+@keyframes alBlink{to{opacity:.35}}
+.al-name{font:400 44px/1.05 Anton;text-transform:uppercase;margin:10px 0 6px;overflow-wrap:anywhere}
+.al-n{font-size:22px;font-weight:800;color:var(--ink)}
+.al-t{display:inline-block;margin:16px 0 10px;padding:10px 30px;border-radius:20px;background:var(--red);box-shadow:0 0 0 3px var(--gold),0 20px 50px -10px rgba(215,20,26,.9)}
+.al-t small{display:block;font:400 14px Anton;letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+.al-t b{font:400 84px/1 Anton;color:#fff}
+.al-note{font:700 22px/1.2 Caveat,cursive;color:#F4F1E8;margin-bottom:10px}
+.al-note:empty{display:none}
+.al-act{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.al-act .btn.gold{font-size:24px;padding:18px 44px;min-height:64px}
+.pvarm{width:100%;margin:0 0 14px;padding:16px;border-radius:16px;border:2px dashed var(--gold);background:rgba(255,201,60,.12);color:var(--gold);font:800 17px Manrope;animation:alBlink .9s ease-in-out infinite alternate}
 .chk{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:10px}
 input[type=range]{width:100%;accent-color:var(--gold)}
 
@@ -475,6 +491,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
   <div class="home">
     <div class="col">
       <div id="demo" class="demo" hidden role="button" tabindex="0" style="cursor:pointer"></div>
+      <div id="demoBar" class="demo" hidden style="border-color:rgba(96,165,250,.5);background:rgba(96,165,250,.12)">Mode démo — placements et arrivées inventés pour voir l'itinéraire et les couleurs. <button class="btn ghost sm" id="demoStop" style="margin-left:8px">Arrêter la démo</button></div>
       <div class="search" id="searchBox">
         <input id="q" type="search" placeholder="Nom ou prénom…" autocomplete="off" spellcheck="false" aria-label="Rechercher un nom">
         <svg class="mag" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -499,6 +516,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 
   <section class="pv" id="pv" hidden>
     <div class="pvhead"><span class="ttlp">Placeurs</span><span class="pvst" id="pvState"></span><button class="btn ghost sm" id="pvName"></button><button class="btn ghost sm" id="pvSound"></button></div>
+    <button class="pvarm" id="pvArm" hidden>Touchez ici pour activer la sirène et les alertes</button>
     <div id="pvList"></div>
   </section>
 </div>
@@ -631,7 +649,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <p id="placeX" style="margin-top:12px"></p>
     </div>
     <div class="card">
-      <div class="row"><div><input class="fi" id="placeQ" placeholder="Filtrer…"></div><div style="flex:0;white-space:nowrap" class="status" id="placeStat"></div><div style="flex:0"><button class="btn ghost sm" id="placeReset" style="color:#F87171;white-space:nowrap">Remettre les placements à zéro</button></div></div>
+      <div class="row"><div><input class="fi" id="placeQ" placeholder="Filtrer…"></div><div style="flex:0;white-space:nowrap" class="status" id="placeStat"></div><div style="flex:0"><button class="btn gold sm" id="demoStart" style="white-space:nowrap">Lancer une démo</button></div><div style="flex:0"><button class="btn ghost sm" id="placeReset" style="color:#F87171;white-space:nowrap">Remettre les placements à zéro</button></div></div>
       <div style="max-height:60vh;overflow:auto;margin-top:10px"><table class="data" id="placeTbl"></table></div>
     </div>
   </div>
@@ -714,6 +732,12 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 </section>
 
 <div class="ctx" id="ctx" hidden></div>
+<div class="alertov" id="alertOv" hidden><div class="albox">
+  <div class="al-k">Nouvelle arrivée</div><div class="al-name" id="alName"></div><div class="al-n" id="alN"></div>
+  <div class="al-t"><small>Table</small><b id="alT"></b></div>
+  <div class="al-note" id="alNote"></div>
+  <div class="al-act"><button class="btn gold" id="alGo">Placer</button><button class="btn ghost" id="alLater">Plus tard</button></div>
+</div></div>
 <div class="modal" id="mCode" hidden><div class="mbox"><h3>Code d'accès</h3>
   <p>Tape le code de l'équipe pour charger les réservations du Google Sheet. Il n'est demandé qu'une fois sur cet ordinateur.</p>
   <input class="fi" id="codeIn" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Code d'accès" style="font-size:22px;padding:12px 14px">
@@ -1142,7 +1166,8 @@ function updArrive(bump){ const N=cur.size||1, a=arrOf(cur), n=a?.n||0, left=N-n
   const inf=$('#rArrInfo'); inf.className='arrinfo'+(n&&n<N?' part':n>=N?' ok':'');
   inf.textContent=d!==n?`${d} arrivé${d>1?'s':''} — appuie sur « Valider » pour enregistrer${d>n?' et prévenir les placeurs':''}`:!n?'Seulement une partie du groupe ? Ajuste avec − / + (ou tape le nombre) puis valide.':n<N?`${n} arrivé${n>1?'s':''} (dès ${a.t}) · ${left} attendu${left>1?'s':''} plus tard`:`Tout le groupe est là · ${a.last&&a.last!==a.t?`premiers à ${a.t}, complet à ${a.last}`:`arrivé à ${a.t}`}`;
   if(bump){ const c=$('#rCount'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); } }
-function setArrUI(n){ const N=cur.size||1, before=arrOf(cur)?.n||0; n=Math.max(0,Math.min(N,n)); draftN=n; if(n===before){ updArrive(); return; }
+function setArrUI(n){ if(S.demoBk&&(arrOf(cur)?.n||0)<n){ setArr(cur,Math.min(n,cur.size||1)); draftN=Math.min(n,cur.size||1); updArrive(true); updKpis(); replayRoute(); toast('Démo : arrivée simulée (rien n\'est envoyé aux placeurs)'); return; }
+ const N=cur.size||1, before=arrOf(cur)?.n||0; n=Math.max(0,Math.min(N,n)); draftN=n; if(n===before){ updArrive(); return; }
   setArr(cur,n); updArrive(true); updKpis(); armTimer();
   if(n>before){ callPlaceur(cur,n-before); replayRoute(); }
   if(n>=N&&before<N){ toast(`✓ ${cur.display} — groupe complet`); if(S.ev.fx){ const r=$('#rCount').getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,40,'#22C55E'); } }
@@ -1250,6 +1275,22 @@ function renderPlace(){
     :`<input class="fi" data-key="${esc(g.key)}" value="${esc(S.assign[g.key]||'')}" placeholder="ex. 12 ou 12, 13">`}${g.overflow?' <span style="color:#F87171">⚠ trop de monde</span>':''}</td></tr>`).join('');
 }
 $('#placeQ').oninput=renderPlace;
+function startDemo(){
+  if(S.demoBk) return toast('La démo est déjà lancée');
+  S.demoBk={assign:S.assign,arrived:S.arrived,extra:S.extra}; S.assign={...S.assign}; S.arrived={...S.arrived};
+  const ts=[...S.plan.tables].sort((a,b)=>(parseInt(a.label)||1e9)-(parseInt(b.label)||1e9)); let k=Math.floor(ts.length*.15);
+  const free=()=>{ while(k<ts.length&&Object.values(S.assign).some(v=>parseTables(v).includes(String(ts[k].label)))) k++; return ts[k++]; };
+  const place=g=>{ const need=Math.max(1,Math.ceil((g.size+(g.extraAuto||0))/12)), lab=[]; for(let i=0;i<need;i++){ const t=free(); if(t) lab.push(t.label); k+=1; } if(lab.length) S.assign[g.key]=lab.join(', '); };
+  const ham=guests.filter(g=>g.jambon>0&&!g.fromSheet).slice(0,3), plain=guests.filter(g=>!g.jambon&&!g.fromSheet&&g.size<=12).slice(0,4);
+  [...ham,...plain].forEach(place);
+  const now2=now(); [ham[0],plain[0]].filter(Boolean).forEach(g=>S.arrived[g.key]={n:g.size,t:now2,last:now2});
+  if(plain[1]) S.arrived[plain[1].key]={n:Math.max(1,Math.ceil(plain[1].size/2)),t:now2,last:now2};
+  save(); computeSeats(); renderHome(); if($('#adm').classList.contains('show')) renderAdmin(); renderDemoBar();
+  toast(`Démo : ${ham.length+plain.length} réservations placées (${ham.length} avec jambon). Cherche « ${(ham[0]||plain[0]).nom} » pour voir l'itinéraire`); }
+function stopDemo(){ if(!S.demoBk) return; S.assign=S.demoBk.assign||{}; S.arrived=S.demoBk.arrived||{}; S.extra=S.demoBk.extra||{}; delete S.demoBk; save(); computeSeats(); renderHome(); if($('#adm').classList.contains('show')) renderAdmin(); renderDemoBar(); toast('Démo arrêtée — tout est revenu comme avant'); }
+function renderDemoBar(){ $('#demoBar').hidden=!S.demoBk; $('#demoStart').textContent=S.demoBk?'Arrêter la démo':'Lancer une démo'; }
+$('#demoStart').onclick=()=>S.demoBk?stopDemo():startDemo();
+$('#demoStop').onclick=stopDemo;
 function resetPlacements(){ S.assign={}; S.extra={}; S.reset1=true; save(); computeSeats(); renderHome(); if($('#adm').classList.contains('show')) renderAdmin(); toast('Placements remis à zéro (le sheet n\'est pas modifié)'); }
 $('#placeReset').onclick=()=>{ if(confirm('Effacer toutes les tables saisies dans « Placement » et les corrections de chaises ?\nLe plan de salle, les arrivées et le Google Sheet ne sont pas touchés.')) resetPlacements(); };
 function renderRecap(){
@@ -1511,7 +1552,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.6';
+const APP_V='2026-10-19.7';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
@@ -1581,13 +1622,21 @@ async function connectRelay(){
     let body=d.message; if(d.attachment?.url&&(!body||body.length<20)){ try{ body=await (await fetch(d.attachment.url)).text(); }catch(e){ return; } }
     let m; try{ m=await unseal(body); }catch(e){ return; } onRelay(m); };
   if(S.mode==='placeur') startHello(); else publishPlan(true); } // nouvelle connexion : on (re)publie le plan pour les placeurs
+/* un même groupe pas encore pris en charge = une seule carte : les envois suivants s'y ajoutent */
+const callAlias=new Map();
+const getCall=id=>calls.get(id)||calls.get(callAlias.get(id));
+function addCall(m){ if(getCall(m.id)) return null;
+  const ex=[...calls.values()].find(c=>c.key===m.key&&c.status==='wait');
+  if(ex){ ex.n+=m.n; ex.total=m.total||ex.total; ex.ts=m.ts; ex.tables=m.tables; ex.tids=m.tids; ex.note=m.note; callAlias.set(m.id,ex.id); return ex; }
+  const c={...m,status:'wait',by:null}; calls.set(m.id,c); return c; }
 function onRelay(m){
+  if(m.t==='call'&&!(S.resetTs&&m.ts<=S.resetTs)){ const c=addCall(m); if(c&&S.mode==='placeur'&&Date.now()-m.ts<120000) alertNew(c); scheduleRelayRender(); return; }
   if(m.t==='reset'){ if(!S.resetTs||m.ts>S.resetTs){ S.resetTs=m.ts; save(); } for(const [id,c] of calls) if(c.ts<=m.ts) calls.delete(id); if(S.mode!=='placeur'&&Object.keys(S.arrived).length&&m.ts>(S.arrTs||0)){} }
   else if(m.t==='call'&&S.resetTs&&m.ts<=S.resetTs){}
   else if(m.t==='call'){ if(!calls.has(m.id)){ calls.set(m.id,{...m,status:'wait',by:null}); if(S.mode==='placeur'&&Date.now()-m.ts<120000) alertNew(m); } }
-  else if(m.t==='claim'){ const c=calls.get(m.id); if(c&&c.status!=='done'){ c.status='claimed'; c.by=m.by; } }
-  else if(m.t==='unclaim'){ const c=calls.get(m.id); if(c&&c.status==='claimed'&&c.by===m.by){ c.status='wait'; c.by=null; } }
-  else if(m.t==='done'){ const c=calls.get(m.id); if(c){ c.status='done'; c.by=m.by||c.by; } }
+  else if(m.t==='claim'){ const c=getCall(m.id); if(c&&c.status!=='done'){ c.status='claimed'; c.by=m.by; } }
+  else if(m.t==='unclaim'){ const c=getCall(m.id); if(c&&c.status==='claimed'&&c.by===m.by){ c.status='wait'; c.by=null; } }
+  else if(m.t==='done'){ const c=getCall(m.id); if(c){ c.status='done'; c.by=m.by||c.by; } }
   else if(m.t==='hello'){ placeursSeen.set(m.by,m.ts); if(S.mode!=='placeur'&&Date.now()-lastPlanSent>5*60e3) publishPlan(true); }
   else if(m.t==='plan'){ if(!S.pvPlanTs||m.ts>S.pvPlanTs){ S.pvPlan=m.plan; S.pvPlanTs=m.ts; if(S.mode==='placeur') save(); } }
   scheduleRelayRender(); }
@@ -1597,12 +1646,34 @@ function startHello(){ const hi=()=>relaySend({t:'hello',by:S.me||'placeur'}); h
 function callPlaceur(g,count,manual){
   if(!placeursOn()) return manual&&toast('Placeurs désactivés (Réglages → Soirée)');
   if(!S.src.url) return manual&&toast("Placeurs : branche d'abord le Google Sheet");
-  const id=uid(), m={t:'call',id,key:g.key,name:`${g.nom.toUpperCase()} ${g.pre}`.trim(),n:count,size:g.size||1,tables:g.tables.map(t=>t.label),tids:g.tables.map(t=>t.id).filter(Boolean),note:g.note||''};
-  calls.set(id,{...m,ts:Date.now(),status:'wait',by:null}); scheduleRelayRender();
+  const id=uid(), m={t:'call',id,key:g.key,name:`${g.nom.toUpperCase()} ${g.pre}`.trim(),n:count,total:arrOf(g)?.n||count,size:g.size||1,tables:g.tables.map(t=>t.label),tids:g.tables.map(t=>t.id).filter(Boolean),note:g.note||''};
+  addCall({...m,ts:Date.now()}); scheduleRelayRender();
   relaySend(m).then(ok=>toast(ok?`Envoyé aux placeurs : ${m.name} → table ${m.tables.join(' · ')||'?'}`:'Placeurs : envoi impossible (connexion ?)')); }
-function beep(){ if(!S.pvSound) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); [0,.18].forEach((d,i)=>{ const o=actx.createOscillator(), g=actx.createGain(), t0=actx.currentTime+d;
-  o.type='sine'; o.frequency.value=i?1175:880; g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(.35,t0+.02); g.gain.exponentialRampToValueAtTime(.0001,t0+.32); o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0+.35); }); }catch(e){} }
-function alertNew(m){ try{ navigator.vibrate&&navigator.vibrate([180,80,180]); }catch(e){} beep(); toast(`Nouvelle arrivée : ${m.name} → table ${m.tables.join(' · ')||'?'}`); }
+function audioOut(){ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(!actx._out){ const c=actx.createDynamicsCompressor(), g=actx.createGain(); c.threshold.value=-10; c.ratio.value=4; g.gain.value=1; c.connect(g).connect(actx.destination); actx._out=c; } return actx._out; }
+function pinpon(times=3){ if(!S.pvSound) return; try{ const out=audioOut(); actx.resume&&actx.resume(); let t=actx.currentTime+.02;
+  for(let k=0;k<times;k++) for(const f of [435,580]){ const o=actx.createOscillator(), o2=actx.createOscillator(), g=actx.createGain();
+    o.type='square'; o2.type='sawtooth'; o.frequency.value=f; o2.frequency.value=f*1.005;
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.55,t+.02); g.gain.setValueAtTime(.55,t+.4); g.gain.exponentialRampToValueAtTime(.0001,t+.46);
+    o.connect(g); o2.connect(g); g.connect(out); o.start(t); o2.start(t); o.stop(t+.48); o2.stop(t+.48); t+=.48; } }catch(e){} }
+const beep=()=>pinpon(1);
+let alertId=null, alertLoop=null;
+function alertNew(m){ alertId=m.id;
+  $('#alName').textContent=m.name; $('#alT').textContent=m.tables.join(' · ')||'?'; $('#alNote').textContent=m.note||'';
+  $('#alN').textContent=callLine(m);
+  const ov=$('#alertOv'); ov.hidden=false; ov.style.animation='none'; void ov.offsetWidth; ov.style.animation='';
+  const ring=()=>{ pinpon(2); try{ navigator.vibrate&&navigator.vibrate([400,150,400,150,400]); }catch(e){} };
+  ring(); clearInterval(alertLoop); let k=0; alertLoop=setInterval(()=>{ if(++k>6||$('#alertOv').hidden){ clearInterval(alertLoop); return; } ring(); },2600); }
+function closeAlert(){ $('#alertOv').hidden=true; clearInterval(alertLoop); }
+function callLine(c){ const tot=c.total||c.n, done=tot>=c.size;
+  return `${c.n} personne${c.n>1?'s':''}${c.size>1?(done&&c.n<c.size?` — groupe complet (${tot}/${c.size})`:` sur ${c.size}`):''}`; }
+$('#alGo').onclick=()=>{ const c=getCall(alertId); closeAlert(); if(!c) return; if(!S.me){ askName(); if(!S.me) return; }
+  if(c.status==='wait'){ c.status='claimed'; c.by=S.me; relaySend({t:'claim',id:c.id,by:S.me}); } pvOpen=c.id; renderPV(true); scheduleRelayRender();
+  setTimeout(()=>document.querySelector(`.pc[data-id="${CSS.escape(c.id)}"]`)?.scrollIntoView({behavior:'smooth',block:'start'}),60); };
+$('#alLater').onclick=closeAlert;
+/* garder l'écran du téléphone allumé en mode placeur */
+let wakeLock=null; async function keepAwake(){ try{ if(S.mode==='placeur'&&'wakeLock' in navigator&&!document.hidden&&!wakeLock){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>wakeLock=null); } }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) keepAwake(); });
+function armAlerts(){ S.pvSound=true; save(); try{ audioOut(); actx.resume(); }catch(e){} pinpon(1); keepAwake(); renderPV(true); }
 function askName(){ const v=prompt('Ton prénom (il s\'affiche chez les autres placeurs et à l\'accueil) :',S.me||''); if(v&&v.trim()){ S.me=v.trim().slice(0,20); save(); if(S.mode==='placeur') startHello(); } }
 const stBadge=c=>c.status==='done'?`<span class="st done">placé${c.by?' · '+esc(c.by):''}</span>`:c.status==='claimed'?`<span class="st claimed">${esc(c.by)} y va</span>`:'<span class="st wait">en attente</span>';
 function scheduleRelayRender(){ if(relayRaf) return; relayRaf=requestAnimationFrame(()=>{ relayRaf=0; renderQueue(); updRPlaceur(); renderRelayInfo(); if(S.mode==='placeur') renderPV(); }); }
@@ -1620,7 +1691,7 @@ function renderRelayInfo(){ const el=$('#relayInfo'); if(!el) return; const on=o
 function renderPV(force){
   const st=$('#pvState'); st.className='pvst'+(relayState==='ok'?' ok':relayState==='err'?' err':'');
   st.textContent={ok:'connecté',err:'hors ligne — reconnexion…',wait:'connexion…',off:"code d'accès requis"}[relayState]||'';
-  $('#pvName').textContent=S.me?`Placeur : ${S.me}`:'Mon prénom'; $('#pvSound').textContent=S.pvSound?'Son activé':'Activer le son'; $('#pvSound').classList.toggle('on',!!S.pvSound);
+  $('#pvName').textContent=S.me?`Placeur : ${S.me}`:'Mon prénom'; $('#pvArm').hidden=!!(S.pvSound&&actx&&actx.state==='running'); $('#pvSound').textContent=S.pvSound?'Son activé':'Activer le son'; $('#pvSound').classList.toggle('on',!!S.pvSound);
   const all=[...calls.values()].sort((a,b)=>b.ts-a.ts), act=all.filter(c=>c.status!=='done'), done=all.filter(c=>c.status==='done').slice(0,15);
   if(!pvOpen||!calls.has(pvOpen)||calls.get(pvOpen).status==='done'){ const f=act.find(c=>c.status==='claimed'&&c.by===S.me); pvOpen=f?f.id:null; }
   const sig=JSON.stringify([act.map(c=>[c.id,c.status,c.by]),done.map(c=>c.id),pvOpen,S.me,!!S.pvPlan]); if(!force&&sig===pvSig) return; pvSig=sig;
@@ -1631,12 +1702,12 @@ function renderPV(force){
 function pcHTML(c){ const mine=c.status==='claimed'&&c.by===S.me, other=c.status==='claimed'&&!mine, open=c.id===pvOpen, tl=c.tables.join(' · '), hasPlan=!!(c.tids?.length&&(S.pvPlan||S.mode!=='placeur'));
   return `<article class="pc${c.status==='wait'?' wait':''}${mine?' mine':''}${other?' other':''}" data-id="${esc(c.id)}">
     ${c.status==='wait'?'<div class="pc-new">Nouvelle arrivée</div>':''}<div class="pc-top"><div class="pc-name">${esc(c.name)}</div><div class="pc-t"><small>Table</small><b>${esc(tl||'?')}</b></div></div>
-    <div class="pc-meta">${c.n} personne${c.n>1?'s':''} ${c.n<c.size?`arrive${c.n>1?'nt':''} (sur ${c.size})`:'à placer'} · pointé à ${new Date(c.ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}${c.note?`<span class="note">${esc(c.note)}</span>`:''}</div>
+    <div class="pc-meta"><b style="color:var(--ink);font-size:18px">${callLine(c)}</b> · pointé à ${new Date(c.ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}${c.note?`<span class="note">${esc(c.note)}</span>`:''}</div>
     ${open&&hasPlan?'<div class="pc-plan"></div>':''}
     <div class="pc-act">${c.status==='wait'?`<button class="btn gold" data-a="claim" style="font-size:20px;padding:16px 34px">Placer</button>`:mine?`<button class="btn go" data-a="done">${CK}Placés</button><button class="btn ghost sm" data-a="unclaim">Je laisse</button>`:`<span class="who">Pris par ${esc(c.by)}</span>`}${!open&&hasPlan?'<button class="btn ghost sm" data-a="open">Voir le plan</button>':''}</div></article>`; }
 function drawPcPlan(box,c){ const p=S.mode==='placeur'?S.pvPlan:S.plan; if(!p||!c) return;
   box.innerHTML='<svg role="img" aria-label="Chemin vers la table"></svg>'; const svg=box.firstChild, old=S.plan; S.plan=p;
-  try{ const ts=c.tids.map(id=>p.tables.find(t=>t.id===id)).filter(Boolean); if(!ts.length){ box.remove(); return; }
+  try{ let ts=c.tids.map(id=>p.tables.find(t=>t.id===id)).filter(Boolean); if(!ts.length) ts=c.tables.map(l=>p.tables.find(t=>norm(t.label)===norm(l))).filter(Boolean); if(!ts.length){ box.remove(); return; }
     routeInfo=null; const route=routeTo(ts[0]), rd=routeInfo?.dur||1.4; box.style.setProperty('--rd',rd+'s'); box.style.setProperty('--arr',(.7+rd).toFixed(2)+'s');
     renderPlan(svg,{hit:new Set(ts.map(t=>t.id)),you:true,dim:true,route});
     const pts=[...(routeInfo?.pts||[]),...ts.map(t=>({x:t.x,y:t.y}))]; let x0=Math.min(...pts.map(q=>q.x))-130, x1=Math.max(...pts.map(q=>q.x))+130, y0=Math.min(...pts.map(q=>q.y))-130, y1=Math.max(...pts.map(q=>q.y))+70;
@@ -1653,7 +1724,9 @@ $('#pvList').addEventListener('click',e=>{ const card=e.target.closest('.pc'); i
   else if(a==='done'){ const r=b.getBoundingClientRect(); c.status='done'; c.by=S.me; renderPV(true); relaySend({t:'done',id,by:S.me}); if(S.ev.fx) burst(r.left+r.width/2,r.top,34,'#22C55E'); }
   scheduleRelayRender(); });
 $('#pvName').onclick=askName;
-$('#pvSound').onclick=()=>{ S.pvSound=!S.pvSound; save(); if(S.pvSound){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume(); }catch(e){} beep(); } renderPV(true); };
+$('#pvSound').onclick=()=>{ if(S.pvSound){ S.pvSound=false; save(); renderPV(true); } else armAlerts(); };
+$('#pvArm').onclick=armAlerts;
+document.addEventListener('pointerdown',()=>{ if(S.mode==='placeur'&&S.pvSound){ try{ audioOut(); actx.resume(); }catch(e){} keepAwake(); } },{passive:true});
 function setMode(m){ S.mode=m==='placeur'?'placeur':'accueil'; save(); const pl=S.mode==='placeur';
   document.querySelectorAll('#modeSw button').forEach(b=>b.classList.toggle('on',b.dataset.m===S.mode));
   $('.home').hidden=pl; $('#pv').hidden=!pl;
@@ -1667,7 +1740,7 @@ setInterval(scheduleRelayRender,60e3); // rafraîchit « placeurs en ligne »
 
 /* ================= Démarrage ================= */
 if(new URLSearchParams(location.search).has('placeur')) S.mode='placeur';
-buildGuests(); applyEv(); renderHome(); $('#q').focus(); setMode(S.mode);
+buildGuests(); applyEv(); renderHome(); $('#q').focus(); setMode(S.mode); renderDemoBar();
 applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else { connectRelay(); if(S.mode!=='placeur') offerSeven(); }
   if(!S.reset2&&S.mode!=='placeur') setTimeout(()=>{ if(S.reset2) return; const a=Object.keys(S.arrived||{}).length, c=calls.size; S.reset2=true; save();
     if((a||c)&&confirm(`Remettre à zéro les arrivées (${a}) et la file des placeurs (${c}) ?`)) resetSoiree(); },4000);
