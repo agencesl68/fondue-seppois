@@ -128,8 +128,14 @@ header{position:relative;display:flex;align-items:center;gap:18px;padding:46px 2
 .t .chair.ham{fill:#E88EA0}
 .t .chair.xtra{fill:#7DD3FC}
 .t .chair.here{fill:#4ADE80}
-.t.ham .t-shape{fill:url(#hamGrad);stroke:#F3A3B3}
-.t.ham .t-label{fill:#FFE6EC}
+.t.ham .t-shape{stroke:#F3A3B3;stroke-width:2.5}
+.t.fill .t-shape{fill:url(#greenGrad);stroke:#86EFAC;stroke-width:2.5}
+.t.fill.ham .t-shape{fill:url(#hamGrad);stroke:#F3A3B3}
+.t.fill .t-label{fill:#fff}
+.t.full .t-shape{stroke-width:4;filter:drop-shadow(0 0 6px rgba(134,239,172,.55))}
+.t.full.ham .t-shape{filter:drop-shadow(0 0 6px rgba(243,163,179,.6))}
+.t.flash .t-shape{animation:tflash 1.2s ease-out 2}
+@keyframes tflash{0%{fill:#FFF6E6}100%{}}
 .hamb circle{fill:#E88EA0;stroke:#FFE6EC;stroke-width:2}
 .hamb text{font-family:Anton;fill:#4A1020;text-anchor:middle;dominant-baseline:central;pointer-events:none}
 .z .z-shape{fill:var(--zone);stroke:var(--zone-line);stroke-width:1.5;stroke-dasharray:5 7}
@@ -355,6 +361,7 @@ table.data th{color:var(--muted);font-weight:800;font-size:11px;text-transform:u
 @keyframes pcPulse{0%,100%{box-shadow:0 0 0 1px rgba(255,201,60,.35),0 12px 34px -14px rgba(255,201,60,.45)}50%{box-shadow:0 0 0 3px rgba(255,201,60,.6),0 14px 40px -10px rgba(255,201,60,.85)}}
 .pc.mine{border-color:#60A5FA;box-shadow:0 0 0 1px rgba(96,165,250,.45)}
 .pc.other{opacity:.55}
+.pc-new{font:400 14px Anton;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
 .pc-top{display:flex;gap:12px;align-items:center}
 .pc-name{font:400 28px/1.05 Anton;text-transform:uppercase;flex:1;min-width:0;overflow-wrap:anywhere}
 .pc-t{text-align:center;padding:6px 14px;border-radius:14px;background:var(--red);box-shadow:0 0 0 2px var(--gold);flex:none}
@@ -413,6 +420,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
   <defs>
     <linearGradient id="woodGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4E2B"/><stop offset=".5" stop-color="#5A381F"/><stop offset="1" stop-color="#4A2C17"/></linearGradient>
     <pattern id="plankGrad" width="60" height="20" patternUnits="userSpaceOnUse"><rect width="60" height="20" fill="#4A2C17"/><rect width="60" height="1.5" y="18.5" fill="#2A170C"/><rect x="38" width="1.5" height="20" fill="#2A170C"/></pattern>
+    <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F8F55"/><stop offset="1" stop-color="#1D6B3E"/></linearGradient>
     <linearGradient id="hamGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B85C72"/><stop offset="1" stop-color="#83354A"/></linearGradient>
     <radialGradient id="glowGrad"><stop offset="0" stop-color="#FFE08A" stop-opacity=".9"/><stop offset=".45" stop-color="#FF9A2F" stop-opacity=".38"/><stop offset="1" stop-color="#FF7A1A" stop-opacity="0"/></radialGradient>
     <pattern id="pisteGrid" width="44" height="44" patternUnits="userSpaceOnUse"><rect width="44" height="44" fill="rgba(120,60,200,.12)"/><rect width="22" height="22" fill="rgba(190,120,255,.16)"/><rect x="22" y="22" width="22" height="22" fill="rgba(190,120,255,.16)"/></pattern>
@@ -452,7 +460,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
     <section class="plancard">
       <div class="planhead">
         <h2>Plan de la salle</h2>
-        <div class="legend"><span><i style="background:var(--red);box-shadow:0 0 0 1px var(--gold)"></i>Recherche</span><span><i style="background:var(--chair-occ)"></i>Place attribuée</span><span><i style="background:#E88EA0"></i>Jambon</span><span><i style="background:#7DD3FC"></i>Chaise en plus</span><span><i style="background:#4ADE80"></i>Arrivé</span><span><i style="background:var(--chair)"></i>Libre</span></div>
+        <div class="legend"><span><i style="background:var(--red);box-shadow:0 0 0 1px var(--gold)"></i>Recherche</span><span><i style="background:var(--chair-occ)"></i>Place attribuée</span><span><i style="background:#2F8F55"></i>Table occupée</span><span><i style="background:#E88EA0"></i>Jambon</span><span><i style="background:#7DD3FC"></i>Chaise en plus</span><span><i style="background:#4ADE80"></i>Arrivé</span><span><i style="background:var(--chair)"></i>Libre</span></div>
         <button class="btn ghost sm" id="editPlanBtn">Modifier le plan</button>
       </div>
       <div class="planbody"><svg id="homePlan" role="img" aria-label="Plan de la salle"></svg></div>
@@ -480,6 +488,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
     <div class="acts stg">
       <div class="arrbox">
         <button class="btn go" id="rAll"></button>
+        <button class="btn gold" id="rSend" hidden></button>
         <div class="stepper"><button class="stp" id="rMinus" aria-label="Une personne de moins">−</button><div class="cnt"><b id="rCount">0</b><span id="rOf"></span></div><button class="stp" id="rPlus" aria-label="Une personne de plus">+</button></div>
         <div class="arrinfo" id="rArrInfo"></div>
         <div class="rplaceur" id="rPlaceur"></div>
@@ -745,6 +754,7 @@ function resizeImage(file,max,cb){ const r=new FileReader(); r.onload=()=>{ cons
   c.width=im.width*k; c.height=im.height*k; c.getContext('2d').drawImage(im,0,0,c.width,c.height); cb(c.toDataURL('image/jpeg',.8)); }; im.src=r.result; }; r.readAsDataURL(file); }
 
 /* ================= Données ================= */
+let lastHere={};
 let guests=[], occ={}, byId={}, tstat={}, ham={}, xtra={}, hereSeats={}, hasMeals=false;
 function parseTables(str){
   const out=[];
@@ -857,7 +867,8 @@ const rotA=o=>o.rot?` transform="rotate(${o.rot} ${o.x} ${o.y})"`:'';
 const unrot=o=>o.rot?` transform="rotate(${-o.rot} ${o.x} ${o.y})"`:'';
 function tableSVG(t,o){
   const st=tstat[t.id], isHam=o.meals&&st&&st.j>0, hs=ham[t.id], xsd=xtra[t.id], hrs=hereSeats[t.id], k=tk(t);
-  const cls=['t']; if(isHam) cls.push('ham'); if(o.hit?.has(t.id)) cls.push('hit'); if(o.match?.has(t.id)) cls.push('match'); if(o.hover?.has(t.id)) cls.push('hover');
+  const cls=['t']; if(isHam) cls.push('ham');
+  if(o.meals&&st&&st.h>0){ cls.push('fill'); if(st.h>=Math.min(st.n||t.seats,t.seats)) cls.push('full'); if(o.showFree){ if((lastHere[t.id]||0)<st.h) cls.push('flash'); lastHere[t.id]=st.h; } } if(o.hit?.has(t.id)) cls.push('hit'); if(o.match?.has(t.id)) cls.push('match'); if(o.hover?.has(t.id)) cls.push('hover');
   if(o.sel?.has(t.id)) cls.push('sel'); if(o.dim&&!o.hit?.has(t.id)&&!o.match?.has(t.id)) cls.push('dimmed');
   const a=occ[t.id]||[]; let mi=0;
   const ch=chairs(t).map((c,s)=>{ const mine=o.guest&&a[s]===o.guest, hm=o.meals&&a[s]&&hs&&hs.has(s), xt=o.meals&&a[s]&&xsd&&xsd.has(s)&&!hm, hr=o.meals&&a[s]&&hrs&&hrs.has(s);
@@ -1037,7 +1048,7 @@ function openGuest(g){
   if(unpaid(g)){ const so=parseFloat(String(g.solde).replace(',','.')); notes.push(`<div class="note pay">Paiement ${esc(g.statut.toLowerCase())}${so>0?` — reste ${String(g.solde).replace(/\s*€/,'')} €`:''}</div>`); }
   if(g.overflow) notes.push(`<div class="note">Plus de monde que de places libres — prévoir des chaises</div>`);
   $('#rNotes').innerHTML=notes.join('');
-  updArrive(); updRPlaceur();
+  draftN=arrOf(g)?.n||0; updArrive(); updRPlaceur();
   const ids=g.tables.map(t=>t.id).filter(Boolean), svg=$('#bigPlan');
   camReset();
   routeInfo=null; const route=ids.length?routeTo(byId[ids[0]]):'', rd=routeInfo?.dur||1.4, bp=$('.bigplan');
@@ -1091,19 +1102,26 @@ function choreo(ids){
   });
 }
 const CK='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg>';
-function updArrive(bump){ const N=cur.size||1, a=arrOf(cur), n=a?.n||0, left=N-n, b=$('#rAll');
+let draftN=0;
+function replayRoute(){ const ids=cur.tables.map(t=>t.id).filter(Boolean); if(!ids.length) return; const svg=$('#bigPlan'); camReset();
+  routeInfo=null; const route=routeTo(byId[ids[0]]), rd=routeInfo?.dur||1.4, bp=$('.bigplan'); bp.style.setProperty('--rd',rd+'s'); bp.style.setProperty('--arr',(.7+rd).toFixed(2)+'s');
+  renderPlan(svg,{hit:new Set(ids),guest:cur.key,you:true,dim:true,meals:true,route}); choreo(ids); }
+function updArrive(bump){ const N=cur.size||1, a=arrOf(cur), n=a?.n||0, left=N-n, b=$('#rAll'), d=draftN, sb=$('#rSend');
+  sb.hidden=d===n; sb.innerHTML=d>n?`${CK}Valider et envoyer au placeur (${d-n})`:`${CK}Valider : ${d} arrivé${d>1?'s':''}`;
   b.disabled=n>=N; b.className='btn '+(n>=N?'done':'go');
   b.innerHTML=n>=N?`${CK}Groupe complet`:n?`${CK}Les ${left} restant${left>1?'s':''} sont là`:(N>1?`${CK}Les ${N} sont là`:`${CK}Arrivé`);
-  $('#rCount').textContent=n; $('#rOf').textContent=`/ ${N} arrivé${N>1?'s':''}`; $('#rMinus').disabled=n<=0; $('#rPlus').disabled=n>=N;
+  $('#rCount').textContent=d; $('#rOf').textContent=`/ ${N} arrivé${N>1?'s':''}`; $('#rMinus').disabled=d<=0; $('#rPlus').disabled=d>=N;
   const inf=$('#rArrInfo'); inf.className='arrinfo'+(n&&n<N?' part':n>=N?' ok':'');
-  inf.textContent=!n?'Seulement une partie du groupe ? Ajuste avec − / + ou tape le nombre au clavier.':n<N?`${n} arrivé${n>1?'s':''} (dès ${a.t}) · ${left} attendu${left>1?'s':''} plus tard`:`Tout le groupe est là · ${a.last&&a.last!==a.t?`premiers à ${a.t}, complet à ${a.last}`:`arrivé à ${a.t}`}`;
+  inf.textContent=d!==n?`${d} arrivé${d>1?'s':''} — appuie sur « Valider » pour enregistrer${d>n?' et prévenir les placeurs':''}`:!n?'Seulement une partie du groupe ? Ajuste avec − / + (ou tape le nombre) puis valide.':n<N?`${n} arrivé${n>1?'s':''} (dès ${a.t}) · ${left} attendu${left>1?'s':''} plus tard`:`Tout le groupe est là · ${a.last&&a.last!==a.t?`premiers à ${a.t}, complet à ${a.last}`:`arrivé à ${a.t}`}`;
   if(bump){ const c=$('#rCount'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); } }
-function setArrUI(n){ const N=cur.size||1, before=arrOf(cur)?.n||0; n=Math.max(0,Math.min(N,n)); if(n===before) return;
+function setArrUI(n){ const N=cur.size||1, before=arrOf(cur)?.n||0; n=Math.max(0,Math.min(N,n)); draftN=n; if(n===before){ updArrive(); return; }
   setArr(cur,n); updArrive(true); updKpis(); armTimer();
-  if(n>before) callPlaceur(cur,n-before);
+  if(n>before){ callPlaceur(cur,n-before); replayRoute(); }
   if(n>=N&&before<N){ toast(`✓ ${cur.display} — groupe complet`); if(S.ev.fx){ const r=$('#rCount').getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,40,'#22C55E'); } }
   else toast(n?`${cur.display} : ${n}/${N} arrivé${n>1?'s':''}`:`${cur.display} : arrivée annulée`); }
-const bumpArr=d=>setArrUI((arrOf(cur)?.n||0)+d);
+const setDraft=v=>{ draftN=Math.max(0,Math.min(cur.size||1,v)); updArrive(true); armTimer(); };
+const bumpArr=d=>setDraft(draftN+d);
+$('#rSend').onclick=()=>setArrUI(draftN);
 $('#rCall').onclick=()=>{ callPlaceur(cur,arrOf(cur)?.n||cur.size||1,true); };
 let numBuf='', numT=0;
 function closeGuest(){ $('#ov').classList.remove('show'); clearInterval(tmr); camReset(); $('#q').value=''; letter=''; sel=-1; renderHome(); $('#q').focus(); }
@@ -1159,10 +1177,10 @@ document.addEventListener('keydown',e=>{
   if(admOn){ if($('#pPlan').classList.contains('on')) editorKey(e); else if(e.key==='Escape') closeAdmin(); return; }
   if(e.key==='Escape'){ if(ovOn) closeGuest(); else { $('#q').value=''; letter=''; renderHome(); $('#q').focus(); } return; }
   if(ovOn){
-    if(e.key==='Enter'&&document.activeElement.tagName!=='BUTTON'){ e.preventDefault(); $('#rAll').click(); }
+    if(e.key==='Enter'&&document.activeElement.tagName!=='BUTTON'){ e.preventDefault(); if(draftN!==(arrOf(cur)?.n||0)) $('#rSend').click(); else $('#rAll').click(); }
     else if(e.key==='+'||e.key==='='||e.key==='ArrowUp'||e.key==='ArrowRight'){ e.preventDefault(); bumpArr(1); }
     else if(e.key==='-'||e.key==='ArrowDown'||e.key==='ArrowLeft'){ e.preventDefault(); bumpArr(-1); }
-    else if(/^[0-9]$/.test(e.key)){ numBuf=(Date.now()-numT<900?numBuf:'')+e.key; numT=Date.now(); setArrUI(parseInt(numBuf,10)); }
+    else if(/^[0-9]$/.test(e.key)){ numBuf=(Date.now()-numT<900?numBuf:'')+e.key; numT=Date.now(); setDraft(parseInt(numBuf,10)); }
     return; }
   if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); sel=Math.max(0,Math.min(shown.length-1,sel+(e.key==='ArrowDown'?1:-1))); renderHome(); }
   else if(e.key==='Enter'){ const g=shown[Math.max(sel,0)]; if(g&&($('#q').value||letter)) openGuest(g); }
@@ -1462,7 +1480,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.1';
+const APP_V='2026-10-19.2';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
@@ -1571,7 +1589,7 @@ function renderPV(force){
   st.textContent={ok:'connecté',err:'hors ligne — reconnexion…',wait:'connexion…',off:"code d'accès requis"}[relayState]||'';
   $('#pvName').textContent=S.me?`Placeur : ${S.me}`:'Mon prénom'; $('#pvSound').textContent=S.pvSound?'Son activé':'Activer le son'; $('#pvSound').classList.toggle('on',!!S.pvSound);
   const all=[...calls.values()].sort((a,b)=>b.ts-a.ts), act=all.filter(c=>c.status!=='done'), done=all.filter(c=>c.status==='done').slice(0,15);
-  if(!pvOpen||!calls.has(pvOpen)||calls.get(pvOpen).status==='done'){ const f=act.find(c=>c.status==='claimed'&&c.by===S.me)||act.find(c=>c.status==='wait'); pvOpen=f?f.id:null; }
+  if(!pvOpen||!calls.has(pvOpen)||calls.get(pvOpen).status==='done'){ const f=act.find(c=>c.status==='claimed'&&c.by===S.me); pvOpen=f?f.id:null; }
   const sig=JSON.stringify([act.map(c=>[c.id,c.status,c.by]),done.map(c=>c.id),pvOpen,S.me,!!S.pvPlan]); if(!force&&sig===pvSig) return; pvSig=sig;
   const list=$('#pvList');
   if(!act.length&&!done.length){ list.innerHTML=`<div class="pvempty"><b>En attente d'arrivées</b>Dès que l'accueil pointe quelqu'un, il apparaît ici avec sa table et le chemin à suivre.</div>`; return; }
@@ -1579,10 +1597,10 @@ function renderPV(force){
   const box=pvOpen&&list.querySelector(`.pc[data-id="${CSS.escape(pvOpen)}"] .pc-plan`); if(box) drawPcPlan(box,calls.get(pvOpen)); }
 function pcHTML(c){ const mine=c.status==='claimed'&&c.by===S.me, other=c.status==='claimed'&&!mine, open=c.id===pvOpen, tl=c.tables.join(' · '), hasPlan=!!(c.tids?.length&&(S.pvPlan||S.mode!=='placeur'));
   return `<article class="pc${c.status==='wait'?' wait':''}${mine?' mine':''}${other?' other':''}" data-id="${esc(c.id)}">
-    <div class="pc-top"><div class="pc-name">${esc(c.name)}</div><div class="pc-t"><small>Table</small><b>${esc(tl||'?')}</b></div></div>
+    ${c.status==='wait'?'<div class="pc-new">Nouvelle arrivée</div>':''}<div class="pc-top"><div class="pc-name">${esc(c.name)}</div><div class="pc-t"><small>Table</small><b>${esc(tl||'?')}</b></div></div>
     <div class="pc-meta">${c.n} personne${c.n>1?'s':''} ${c.n<c.size?`arrive${c.n>1?'nt':''} (sur ${c.size})`:'à placer'} · pointé à ${new Date(c.ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}${c.note?`<span class="note">${esc(c.note)}</span>`:''}</div>
     ${open&&hasPlan?'<div class="pc-plan"></div>':''}
-    <div class="pc-act">${c.status==='wait'?`<button class="btn gold" data-a="claim">Je m'en occupe</button>`:mine?`<button class="btn go" data-a="done">${CK}Placés</button><button class="btn ghost sm" data-a="unclaim">Je laisse</button>`:`<span class="who">Pris par ${esc(c.by)}</span>`}${!open&&hasPlan?'<button class="btn ghost sm" data-a="open">Voir le plan</button>':''}</div></article>`; }
+    <div class="pc-act">${c.status==='wait'?`<button class="btn gold" data-a="claim" style="font-size:20px;padding:16px 34px">Placer</button>`:mine?`<button class="btn go" data-a="done">${CK}Placés</button><button class="btn ghost sm" data-a="unclaim">Je laisse</button>`:`<span class="who">Pris par ${esc(c.by)}</span>`}${!open&&hasPlan?'<button class="btn ghost sm" data-a="open">Voir le plan</button>':''}</div></article>`; }
 function drawPcPlan(box,c){ const p=S.mode==='placeur'?S.pvPlan:S.plan; if(!p||!c) return;
   box.innerHTML='<svg role="img" aria-label="Chemin vers la table"></svg>'; const svg=box.firstChild, old=S.plan; S.plan=p;
   try{ const ts=c.tids.map(id=>p.tables.find(t=>t.id===id)).filter(Boolean); if(!ts.length){ box.remove(); return; }
