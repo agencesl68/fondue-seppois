@@ -611,7 +611,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <p id="placeX" style="margin-top:12px"></p>
     </div>
     <div class="card">
-      <div class="row"><div><input class="fi" id="placeQ" placeholder="Filtrer…"></div><div style="flex:0;white-space:nowrap" class="status" id="placeStat"></div></div>
+      <div class="row"><div><input class="fi" id="placeQ" placeholder="Filtrer…"></div><div style="flex:0;white-space:nowrap" class="status" id="placeStat"></div><div style="flex:0"><button class="btn ghost sm" id="placeReset" style="color:#F87171;white-space:nowrap">Remettre les placements à zéro</button></div></div>
       <div style="max-height:60vh;overflow:auto;margin-top:10px"><table class="data" id="placeTbl"></table></div>
     </div>
   </div>
@@ -1230,6 +1230,8 @@ function renderPlace(){
     :`<input class="fi" data-key="${esc(g.key)}" value="${esc(S.assign[g.key]||'')}" placeholder="ex. 12 ou 12, 13">`}${g.overflow?' <span style="color:#F87171">⚠ trop de monde</span>':''}</td></tr>`).join('');
 }
 $('#placeQ').oninput=renderPlace;
+function resetPlacements(){ S.assign={}; S.extra={}; S.reset1=true; save(); computeSeats(); renderHome(); if($('#adm').classList.contains('show')) renderAdmin(); toast('Placements remis à zéro (le sheet n\'est pas modifié)'); }
+$('#placeReset').onclick=()=>{ if(confirm('Effacer toutes les tables saisies dans « Placement » et les corrections de chaises ?\nLe plan de salle, les arrivées et le Google Sheet ne sont pas touchés.')) resetPlacements(); };
 function renderRecap(){
   computeSeats();
   const ts=[...S.plan.tables].sort((a,b)=>(parseInt(a.label)||1e9)-(parseInt(b.label)||1e9)||String(a.label).localeCompare(String(b.label)));
@@ -1488,7 +1490,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.3';
+const APP_V='2026-10-19.4';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
@@ -1512,7 +1514,7 @@ async function applyHash(){
     if(h.has('cfg')){ const c=await unpackCfg(h.get('cfg'));
       if(c.plan&&(!hadStored||confirm("Ce lien contient un plan de salle et des placements.\nRemplacer ceux de cet ordinateur ? (les arrivées déjà pointées sont gardées)"))){
         const bg=S.plan.bg; S.plan=Object.assign({w:1800,h:1100,bgOp:.5},c.plan); if(!S.plan.bg) S.plan.bg=bg;
-        S.assign=c.assign||{}; S.extra=c.extra||{}; if(c.ev) Object.assign(S.ev,c.ev); S.done7=true; msg='Plan, placements et sheet installés sur cet ordinateur'; }
+        S.assign=c.assign||{}; S.extra=c.extra||{}; S.reset1=true; if(c.ev) Object.assign(S.ev,c.ev); S.done7=true; msg='Plan, placements et sheet installés sur cet ordinateur'; }
       if(c.sheet) S.src.url=c.sheet; }
     if(h.has('sheet')) S.src.url=sheetUrlOf(h.get('sheet'));
     history.replaceState(null,'',location.pathname+location.search); // on retire le lien de la barre d'adresse
@@ -1643,7 +1645,8 @@ setInterval(scheduleRelayRender,60e3); // rafraîchit « placeurs en ligne »
 /* ================= Démarrage ================= */
 if(new URLSearchParams(location.search).has('placeur')) S.mode='placeur';
 buildGuests(); applyEv(); renderHome(); $('#q').focus(); setMode(S.mode);
-applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else { connectRelay(); if(S.mode!=='placeur') offerSeven(); } });
+applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else { connectRelay(); if(S.mode!=='placeur') offerSeven(); }
+  if(!S.reset1){ const n=Object.keys(S.assign||{}).length; if(n&&S.mode!=='placeur'&&confirm(`Remettre les placements à zéro ? (${n} réservation${n>1?'s':''} placée${n>1?'s':''} sur cet ordinateur)\nLe plan de salle, les arrivées et le Google Sheet ne sont pas touchés.`)) resetPlacements(); else { S.reset1=true; save(); } } });
 addEventListener('hashchange',()=>applyHash()); // lien d'accès ouvert alors que l'app est déjà affichée
 </script>
 </body>
