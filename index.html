@@ -679,7 +679,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 <div class="ctx" id="ctx" hidden></div>
 <div class="modal" id="mCode" hidden><div class="mbox"><h3>Code d'accès</h3>
   <p>Tape le code de l'équipe pour charger les réservations du Google Sheet. Il n'est demandé qu'une fois sur cet ordinateur.</p>
-  <input class="fi" id="codeIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Code d'accès" style="font-size:22px;padding:12px 14px">
+  <input class="fi" id="codeIn" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Code d'accès" style="font-size:22px;padding:12px 14px">
   <p class="status err" id="codeErr" hidden style="margin:8px 0 0">Code incorrect — réessaie.</p>
   <div class="btns" style="margin-top:16px"><button class="btn gold" id="codeOk">Charger les réservations</button><button class="btn ghost" id="codeNo">Plus tard</button><button class="btn ghost sm" id="codeSrc" style="margin-left:auto">J'ai le lien du sheet</button></div></div></div>
 <div class="modal" id="m7" hidden><div class="mbox"><h3>7 tables par colonne</h3><p id="m7t"></p>
@@ -1444,11 +1444,11 @@ $('#planRestore').onclick=()=>{ if(!confirm("Revenir au plan d'avant l'ajout des
 
 /* ================= Code d'accès : le lien du sheet est chiffré (AES-GCM, clé dérivée du code par PBKDF2) =================
    Le dépôt est public : sans le code, le lien du sheet (et donc les réservations) reste illisible. */
-const SHEET_ENC='hSC3ojtfEK+1y65uYMbMwZ9x7qPXj7FrwF1iIfEf3RNE0DrJ0vnLzXEO/DenGsODgyY8XFLVJeOOUQzMl8p2gvJ+IeGt7MEsTuOYAY6Ivg2sUsW0anpDSsaiNZYgF3//x7wZx23QmEBitDeE4ErgkTAHPTRUsa10Avx+ll8tOTZiyrp1VK0yUV/Daxg/abYp';
+const SHEET_ENC='VjkDjDkToj9sgq74y9RWy9nOFMCt8Js3MkroZBoXg/pzLCXJKdGbZT3fLMu3wwaMsMJO5qRHyo2FtA4NWDNEzg+Uxe0LL8K7K/S7r54kBmG+2su/FexbPSibidd0LxvJ/gIlVzUWyUsD6pZsTXwMi6R0AJVAb73TXCr3i7vTNhMCFCrjEi7hwS5LC7lMllOZ';
 const normCode=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 async function unlockSheet(code){ const all=Uint8Array.from(atob(SHEET_ENC),c=>c.charCodeAt(0)), salt=all.slice(0,16), iv=all.slice(16,28), ct=all.slice(28);
   const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(normCode(code)),'PBKDF2',false,['deriveKey']);
-  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:600000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
   return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct)); }
 function askCode(){ if(!window.crypto?.subtle){ openAdmin('pSource'); $('#srcUrl').focus(); return; }
   $('#codeErr').hidden=true; $('#mCode').hidden=false; $('#codeIn').value=''; setTimeout(()=>$('#codeIn').focus(),50); }
@@ -1462,7 +1462,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-18.4';
+const APP_V='2026-10-19.1';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
