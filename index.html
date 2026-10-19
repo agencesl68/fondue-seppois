@@ -687,7 +687,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
         <button class="btn ghost sm" id="bkExport">Exporter (.json)</button>
         <label class="btn ghost sm" style="cursor:pointer">Importer…<input type="file" id="bkImport" accept=".json" hidden></label>
         <button class="btn ghost sm" id="arrExport">Liste des arrivées (.csv)</button>
-        <button class="btn ghost sm" id="arrReset" style="color:#F87171">Remettre les arrivées à zéro</button>
+        <button class="btn ghost sm" id="arrReset" style="color:#F87171">Remettre arrivées + placeurs à zéro</button>
       </div>
     </div>
   </div>
@@ -1452,7 +1452,8 @@ function download(name,text,type){ const a=document.createElement('a'); a.href=U
 $('#bkExport').onclick=()=>download('accueil-fondue-sauvegarde.json',JSON.stringify({plan:S.plan,assign:S.assign,extra:S.extra,arrived:S.arrived,ev:S.ev,src:S.src,cols:S.cols},null,2),'application/json');
 $('#bkImport').onchange=e=>{ const f=e.target.files[0]; if(!f) return; f.text().then(t=>{ try{ Object.assign(S,JSON.parse(t)); save(); buildGuests(); applyEv(); renderAdmin(); toast('Sauvegarde importée'); }catch(err){ alert('Fichier invalide.'); } }); };
 $('#arrExport').onclick=()=>download('arrivees.csv','\ufeffNom;Prénom;Personnes;Dont -6 ans;Dont gratuits adultes;Chaises en plus;Arrivés;Fondue;Jambon;Table;Première arrivée;Dernière mise à jour\n'+guests.map(g=>{ const a=arrOf(g); return [g.nom,g.pre,g.size,g.gratE,S.ev.gratAExtra?g.gratA:0,g.extra,a?.n||0,g.fondue,g.jambon,tLabel(g),a?.t||'',a?.last||''].join(';'); }).join('\n'),'text/csv');
-$('#arrReset').onclick=()=>{ if(confirm('Effacer toutes les arrivées pointées ?')){ S.arrived={}; save(); renderHome(); } };
+function resetSoiree(){ const ts=Date.now(); S.arrived={}; S.resetTs=ts; S.reset2=true; save(); calls.clear(); computeSeats(); renderHome(); scheduleRelayRender(); relaySend({t:'reset'}); toast('Arrivées et file des placeurs remises à zéro'); }
+$('#arrReset').onclick=()=>{ if(confirm('Remettre à zéro toutes les arrivées pointées ET la file des placeurs (sur tous les appareils) ?')) resetSoiree(); };
 
 /* ================= Passage à 7 tables par colonne (demandé le 16/10, proposé une seule fois) ================= */
 const BK7=LS+'.avant-7-rangees';
@@ -1490,7 +1491,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-19.4';
+const APP_V='2026-10-19.5';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) location.replace(location.pathname+'?v='+encodeURIComponent(m[1])+location.hash); }catch(e){} })();
@@ -1561,7 +1562,9 @@ async function connectRelay(){
     let m; try{ m=await unseal(body); }catch(e){ return; } onRelay(m); };
   if(S.mode==='placeur') startHello(); else publishPlan(true); } // nouvelle connexion : on (re)publie le plan pour les placeurs
 function onRelay(m){
-  if(m.t==='call'){ if(!calls.has(m.id)){ calls.set(m.id,{...m,status:'wait',by:null}); if(S.mode==='placeur'&&Date.now()-m.ts<120000) alertNew(m); } }
+  if(m.t==='reset'){ if(!S.resetTs||m.ts>S.resetTs){ S.resetTs=m.ts; save(); } for(const [id,c] of calls) if(c.ts<=m.ts) calls.delete(id); if(S.mode!=='placeur'&&Object.keys(S.arrived).length&&m.ts>(S.arrTs||0)){} }
+  else if(m.t==='call'&&S.resetTs&&m.ts<=S.resetTs){}
+  else if(m.t==='call'){ if(!calls.has(m.id)){ calls.set(m.id,{...m,status:'wait',by:null}); if(S.mode==='placeur'&&Date.now()-m.ts<120000) alertNew(m); } }
   else if(m.t==='claim'){ const c=calls.get(m.id); if(c&&c.status!=='done'){ c.status='claimed'; c.by=m.by; } }
   else if(m.t==='unclaim'){ const c=calls.get(m.id); if(c&&c.status==='claimed'&&c.by===m.by){ c.status='wait'; c.by=null; } }
   else if(m.t==='done'){ const c=calls.get(m.id); if(c){ c.status='done'; c.by=m.by||c.by; } }
@@ -1646,6 +1649,8 @@ setInterval(scheduleRelayRender,60e3); // rafraîchit « placeurs en ligne »
 if(new URLSearchParams(location.search).has('placeur')) S.mode='placeur';
 buildGuests(); applyEv(); renderHome(); $('#q').focus(); setMode(S.mode);
 applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else { connectRelay(); if(S.mode!=='placeur') offerSeven(); }
+  if(!S.reset2&&S.mode!=='placeur') setTimeout(()=>{ if(S.reset2) return; const a=Object.keys(S.arrived||{}).length, c=calls.size; S.reset2=true; save();
+    if((a||c)&&confirm(`Remettre à zéro les arrivées (${a}) et la file des placeurs (${c}) ?`)) resetSoiree(); },4000);
   if(!S.reset1){ const n=Object.keys(S.assign||{}).length; if(n&&S.mode!=='placeur'&&confirm(`Remettre les placements à zéro ? (${n} réservation${n>1?'s':''} placée${n>1?'s':''} sur cet ordinateur)\nLe plan de salle, les arrivées et le Google Sheet ne sont pas touchés.`)) resetPlacements(); else { S.reset1=true; save(); } } });
 addEventListener('hashchange',()=>applyHash()); // lien d'accès ouvert alors que l'app est déjà affichée
 </script>
