@@ -647,6 +647,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <p>La colonne « Table n° » du sheet est prioritaire. Sinon, saisis la table ici (ex. <b>12</b> ou <b>12, 13</b> pour un grand groupe) — stocké dans l'app, le sheet n'est jamais modifié.</p>
       <div class="load" id="load"></div>
       <p id="placeX" style="margin-top:12px"></p>
+      <p id="placeWarn" class="status err" style="margin-top:8px" hidden></p>
     </div>
     <div class="card">
       <div class="row"><div><input class="fi" id="placeQ" placeholder="Filtrer…"></div><div style="flex:0;white-space:nowrap" class="status" id="placeStat"></div><div style="flex:0"><button class="btn gold sm" id="demoStart" style="white-space:nowrap">Lancer une démo</button></div><div style="flex:0"><button class="btn ghost sm" id="placeReset" style="color:#F87171;white-space:nowrap">Remettre les placements à zéro</button></div></div>
@@ -770,18 +771,15 @@ const DEFAULT_LOGO='data:image/webp;base64,UklGRtiIAABXRUJQVlA4WAoAAAAQAAAAZwEAZ
 const SHEET=''; // le lien du Google Sheet n'est pas dans le code (dépôt public) : il se colle dans Réglages → Source et reste enregistré sur l'ordi
 
 function defaultPlan(){
-  const tables=[]; let n=1;
-  const T=(x,y)=>tables.push({id:'t'+n, label:String(n++), x, y, w:196, h:58, rot:0, seats:12});
-  const rows=[230,350,470,590,710,830,950];
-  for(const x of [140,360,580]) rows.forEach(y=>T(x,y));
-  for(const y of [830,950]) for(const x of [790,1010]) T(x,y);
-  for(const x of [1220,1440,1660]) rows.forEach(y=>T(x,y));
-  return { w:1800, h:1220, bg:null, bgOp:.5, tables, zones:[
+  // 24 grandes tables de 24 places (12 de chaque côté), numérotées comme dans le sheet : de gauche à droite puis de haut en bas
+  const tables=[]; let n=1; const cols=[260,680,1120,1540], rows=[540,660,780,900,1020,1140];
+  rows.forEach(y=>cols.forEach(x=>{ tables.push({id:'t'+n,label:String(n),x,y,w:380,h:58,rot:0,seats:24}); n++; }));
+  return { w:1800, h:1390, bg:null, bgOp:.5, tables, zones:[
     {id:'z1',kind:'scene', label:'Scène',             x:900, y:105, w:700,h:90, rot:0},
-    {id:'z2',kind:'piste', label:'Piste',             x:900, y:400, w:380,h:360,rot:0},
-    {id:'z3',kind:'bar',   label:'Bar',               x:300, y:1130,w:420,h:84, rot:0},
-    {id:'z4',kind:'fondue',label:'Préparateur fondue',x:1500,y:1130,w:440,h:84, rot:0},
-    {id:'z5',kind:'entry', label:'Entrée',            x:900, y:1180,w:240,h:60, rot:0},
+    {id:'z2',kind:'piste', label:'Piste',             x:900, y:310, w:560,h:240,rot:0},
+    {id:'z3',kind:'bar',   label:'Bar',               x:300, y:1290,w:420,h:84, rot:0},
+    {id:'z4',kind:'fondue',label:'Préparateur fondue',x:1500,y:1290,w:440,h:84, rot:0},
+    {id:'z5',kind:'entry', label:'Entrée',            x:900, y:1340,w:240,h:60, rot:0},
   ]};
 }
 const hadStored=(()=>{ try{ return !!JSON.parse(localStorage.getItem(LS))?.plan; }catch(e){ return false; } })();
@@ -1291,6 +1289,11 @@ function renderPlace(){
     return `<span class="${over?'over':used>=t.seats?'full':''}">T${esc(t.label)} · ${used}/${t.seats}${tstat[t.id].j?` · <i class="nj" style="font-style:normal">${tstat[t.id].j} J</i>`:''}</span>`; }).join('');
   const q=norm($('#placeQ').value), list=guests.filter(g=>!q||norm(g.display).includes(q));
   $('#placeStat').textContent=`${guests.filter(g=>g.tables.length).length} / ${guests.length} placées`;
+  const unk=guests.filter(g=>g.tables.some(t=>!t.id)), none=guests.filter(g=>!g.tables.length), over=S.plan.tables.filter(t=>tstat[t.id].n>t.seats);
+  const warn=[unk.length?`<b>Table inconnue sur le plan</b> : ${unk.map(g=>`${esc(g.display)} → « ${esc(g.tables.filter(t=>!t.id).map(t=>t.label).join(', '))} »`).join(' · ')}`:'',
+    none.length?`<b>Sans table</b> : ${none.map(g=>`${esc(g.display)} (${g.places} pl.)`).join(' · ')}`:'',
+    over.length?`<b>Tables trop pleines</b> : ${over.map(t=>`T${esc(t.label)} ${tstat[t.id].n}/${t.seats}`).join(' · ')}`:''].filter(Boolean);
+  $('#placeWarn').innerHTML=warn.join('<br>'); $('#placeWarn').hidden=!warn.length;
   const withX=guests.filter(g=>g.extra);
   $('#placeX').innerHTML=withX.length?`<b>${withX.reduce((a,g)=>a+g.extra,0)} chaise(s) / place(s) en plus</b> pour ${withX.length} réservation${withX.length>1?'s':''} : `+withX.map(g=>`${esc(g.nom)} ${esc(g.pre)} <span class="nx">+${g.extra}</span>${g.extraManual?' (manuel)':''}`).join(' · '):'Aucune chaise en plus détectée dans les remarques.';
   $('#placeTbl').innerHTML=`<tr><th>Nom</th><th>Pers.</th><th>Infos</th><th title="Chaises / places en plus (lues dans les remarques, modifiables)">+ chaises</th><th style="width:210px">Table(s)</th></tr>`+list.map(g=>`<tr><td><b>${esc(g.nom.toUpperCase())}</b> ${esc(g.pre)}</td><td>${g.size}${g.gratE?` <span class="status">(dont ${g.gratE} -6 ans)</span>`:''}${g.jambon?` <span class="nj">(${g.jambon} J)</span>`:''}</td><td style="color:var(--muted)">${esc(g.note)}</td><td style="white-space:nowrap"><input class="fi xin" type="number" min="0" max="20" data-xkey="${esc(g.key)}" value="${g.extra}" title="${esc(g.extraWhy.join(', '))}"> <span class="status">${g.extraManual?'manuel':g.extraAuto?'remarque':''}</span></td><td>${g.fromSheet
@@ -1516,7 +1519,7 @@ $('#tSpread').onclick=()=>{ const s=selected(); if(s.length<3) return toast('Sé
   mutate(()=>sorted.forEach((o,i)=>o[ax]=G(a0+(a1-a0)*i/(sorted.length-1)))); };
 $('#renum').onclick=()=>{ if(!confirm('Renuméroter toutes les tables de gauche à droite, puis de haut en bas ?\nAttention : les numéros saisis dans « Placement » ou dans le sheet ne suivront pas.')) return;
   mutate(()=>{ [...S.plan.tables].sort((a,b)=>Math.round(a.x/60)-Math.round(b.x/60)||a.y-b.y).forEach((t,i)=>t.label=String(i+1)); }); };
-$('#planReset').onclick=()=>{ if(confirm('Remplacer le plan actuel par le plan par défaut (46 tables de 12, 7 rangées par colonne) ?')) mutate(()=>{ const bg=S.plan.bg; S.plan=defaultPlan(); S.plan.bg=bg; selIds=new Set(); }); };
+$('#planReset').onclick=()=>{ if(confirm('Remplacer le plan actuel par le plan par défaut (24 grandes tables de 24 places) ?')) mutate(()=>{ const bg=S.plan.bg; S.plan=defaultPlan(); S.plan.bg=bg; selIds=new Set(); }); };
 $('#pW').addEventListener('change',e=>mutate(()=>S.plan.w=Math.max(400,+e.target.value||1800)));
 $('#pH').addEventListener('change',e=>mutate(()=>S.plan.h=Math.max(300,+e.target.value||1100)));
 $('#bgFile').onchange=e=>{ const f=e.target.files[0]; if(f) resizeImage(f,1800,url=>{ S.plan.bg=url; save(); renderEditor(); toast('Calque importé'); }); };
@@ -1542,6 +1545,7 @@ $('#arrReset').onclick=()=>{ if(confirm('Remettre à zéro toutes les arrivées 
 /* ================= Passage à 7 tables par colonne (demandé le 16/10, proposé une seule fois) ================= */
 const BK7=LS+'.avant-7-rangees';
 function offerSeven(){
+  return; // proposition « 7 tables par colonne » terminée (le plan est désormais en grandes tables de 24)
   if(S.done7) return;
   $('#cN').value=7; $('#cMode').value='to'; $('#cPush').checked=true;
   const {cols}=colPlan(), add=cols.reduce((a,x)=>a+x.k,0);
@@ -1575,7 +1579,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-20.1';
+const APP_V='2026-10-21.1';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) { const q=new URLSearchParams(location.search); q.set('v',m[1]); location.replace(location.pathname+'?'+q.toString()+location.hash); } }catch(e){} })();
@@ -1787,6 +1791,10 @@ buildGuests(); applyEv(); renderHome(); $('#q').focus(); setMode(S.mode); render
 if(DEMO&&S.mode!=='placeur'&&!S.accName) setTimeout(()=>askName('accueil'),600);
 if(DEMO){ connectRelay(); $('#demoBar').hidden=false; $('#demoBar').innerHTML='<b>DÉMO</b> — réservations fictives pour découvrir l\'app : cherche un nom (ex. « Petit », « Durand »), valide les arrivées, et ouvre la démo placeur sur un téléphone : <b>agencesl68.github.io/fondue-seppois/?demo&placeur</b>'; }
 else applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else { connectRelay(); if(S.mode!=='placeur'){ offerSeven(); if(!S.accName) askName('accueil'); } }
+  if(!S.fix24&&S.mode!=='placeur') setTimeout(()=>{ if(S.fix24) return; S.fix24=true; save();
+    const small=S.plan.tables.filter(t=>(+t.seats||0)<24); if(!small.length) return;
+    if(confirm(`Dans le Google Sheet, une table reçoit environ 24 personnes.\nMettre les ${S.plan.tables.length} tables de ton plan à 24 places ?\n\nTa disposition ne change pas. Ton plan actuel est gardé (Réglages → Plan de salle → « Revenir au plan d'avant »).`)){
+      try{ localStorage.setItem(BK7,JSON.stringify(S.plan)); }catch(e){} S.plan.tables.forEach(t=>t.seats=24); save(); computeSeats(); renderHome(); publishPlan(true); toast('Toutes les tables ont maintenant 24 places'); } },6500);
   if(!S.reset3&&S.mode!=='placeur') setTimeout(()=>{ if(S.reset3) return; S.reset3=true; S.reset2=true; S.reset1=true; save();
     const a=Object.keys(S.assign||{}).length, r=Object.keys(S.arrived||{}).length, c=calls.size;
     if((a||r||c||S.demoBk)&&confirm(`Tout remettre à zéro ?\n• placements : ${a}\n• arrivées : ${r}\n• file des placeurs : ${c}${S.demoBk?'\n• la démo sera arrêtée':''}\n\nLe plan de salle et le Google Sheet ne sont pas touchés.`)){
