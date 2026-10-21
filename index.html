@@ -706,7 +706,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 
   <div class="panel narrow" id="pRecap">
     <div class="card">
-      <div class="row"><div><h3>Récap par table — fondues et jambons</h3><p>Calculé depuis le sheet (colonnes Adultes, -12 ans, Jambons) et le placement. Les enfants de moins de 6 ans gratuits ont leur chaise : ils comptent dans les places mais pas dans les fondues ni les jambons. Les gratuits adultes font partie des adultes (comme dans le sheet) — réglable dans Soirée. Les chaises / places en plus demandées dans les remarques (chaise supp, poussette…) comptent dans les places ; corrigeables dans Placement. Pour un groupe réparti sur plusieurs tables, jambons et enfants sont répartis au prorata. Clique sur une ligne (ou sur une table du plan) pour le détail complet.</p></div><div style="flex:0"><button class="btn gold sm" id="recapPrint">Imprimer pour la cuisine</button></div></div>
+      <div class="row"><div><h3>Récap par table — fondues et jambons</h3><p>Calculé depuis le sheet (colonnes Adultes, -12 ans, Jambons) et le placement. Les enfants de moins de 6 ans gratuits sont indiqués pour info : pas de chaise, pas de fondue ni de jambon. Les gratuits adultes font partie des adultes (comme dans le sheet) — réglable dans Soirée. Les chaises en plus demandées dans les remarques (« chaise supp »…) comptent dans les places ; les poussettes non. Corrigeables dans Placement. Pour un groupe réparti sur plusieurs tables, jambons et enfants sont répartis au prorata. Clique sur une ligne (ou sur une table du plan) pour le détail complet.</p></div><div style="flex:0"><button class="btn gold sm" id="recapPrint">Imprimer pour la cuisine</button></div></div>
       <div class="kpirow" id="recapTot"></div>
       <div style="overflow:auto"><table class="data" id="recapTbl"></table></div>
     </div>
@@ -912,7 +912,7 @@ function buildGuests(){
       fondue:num('fa')+num('fe'), fondueE:num('fe'), jambon:num('ja')+num('je'), jambonE:num('je'), gratE:num('ge'), gratA:num('gadu')};
     if(!g.nb) g.nb=g.fondue+g.jambon;
     if(!hasMeals) g.fondue=g.nb;
-    g.size=g.nb+g.gratE; // places à prévoir : total payant + enfants -6 ans gratuits (chacun a sa chaise)
+    g.size=g.nb; // places assises = total du sheet ; les enfants -6 ans gratuits sont une info (pas de chaise)
     if(S.ev.gratAExtra&&g.gratA){ g.size+=g.gratA; g.fondue+=g.gratA; } // gratuits adultes en plus : une chaise et une fondue chacun
     const ex=extrasFromNote(g.note); g.extraAuto=ex.n; g.extraWhy=ex.why;
     return g;
@@ -920,12 +920,12 @@ function buildGuests(){
   computeSeats();
   guests.sort((a,b)=>a.sortKey.localeCompare(b.sortKey)||a.display.localeCompare(b.display));
 }
-/* chaises / places en plus demandées dans les remarques du sheet (« prévoir 1 chaise supp », « place pour poussette »…) */
+/* chaises / places en plus demandées dans les remarques du sheet (« prévoir 1 chaise supp »…) — les poussettes ne comptent pas */
 const NUMW={un:1,une:1,deux:2,trois:3,quatre:4,cinq:5};
 function extrasFromNote(note){
   const t=norm(note); let n=0; const why=[]; if(!t) return {n,why};
   t.split(/\+|,|;|\bet\b|\//).forEach(seg=>{ seg=seg.trim(); if(!seg) return;
-    if(/poussette|landau|cosy/.test(seg)){ n+=1; why.push('poussette'+(/bout/.test(seg)?' (au bout de table)':'')); return; }
+    if(/poussette|landau|cosy/.test(seg)) return; // poussette : info seulement, pas une place assise
     if(/(chaise|place|siege)s?(\s+assises?)?\s+(en\s+)?(supp|suppl|supplementaires?|en plus|de plus)/.test(seg)||/(rajout|ajout)\w*\s.*(chaise|place)/.test(seg)){
       const m=seg.match(/(\d+|une?|deux|trois|quatre|cinq)\s+(chaise|place|siege)/), k=m?(NUMW[m[1]]||parseInt(m[1],10)||1):1; n+=k; why.push(`${k} ${/chaise/.test(seg)?'chaise':'place'}${k>1?'s':''} en plus`); } });
   return {n,why};
@@ -958,8 +958,8 @@ function computeSeats(){
     if(hasQ) g.overflow=tids.some((id,i)=>cnt[i]>g.seats.filter(x=>x.tid===id).length);
     if(!tids.length){ const t0=g.tables.find(t=>t.id); if(t0){ tids.push(t0.id); cnt.push(0); } } // table pleine : le groupe reste compté à sa table (en surnombre)
     if(left>0&&tids.length) cnt[cnt.length-1]+=left;
-    const tot=cnt.reduce((a,b)=>a+b,0), jam=distribute(Math.min(g.jambon,tot),cnt), pet=distribute(Math.min(g.gratE,tot),cnt), xs=distribute(Math.min(g.extra,tot),cnt), here=distribute(Math.min(arrOf(g)?.n||0,tot),cnt);
-    const fo=cnt.map((c,i)=>Math.max(0,c-jam[i]-pet[i]-xs[i])), sum=a=>a.reduce((x,y)=>x+y,0);
+    const tot=cnt.reduce((a,b)=>a+b,0), jam=distribute(Math.min(g.jambon,tot),cnt), pet=distribute(g.gratE,cnt), xs=distribute(Math.min(g.extra,tot),cnt), here=distribute(Math.min(arrOf(g)?.n||0,tot),cnt);
+    const fo=cnt.map((c,i)=>Math.max(0,c-jam[i]-xs[i])), sum=a=>a.reduce((x,y)=>x+y,0);
     const fe=distribute(Math.min(g.fondueE,sum(fo)),fo), je=distribute(Math.min(g.jambonE,sum(jam)),jam), fa=fo.map((v,i)=>v-fe[i]), ga=distribute(Math.min(g.gratA,sum(fa)),fa);
     g.perTable=tids.map((id,i)=>({tid:id,n:cnt[i],j:jam[i],f:fo[i],p:pet[i],x:xs[i],h:here[i],fa:fa[i],fe:fe[i],ja:jam[i]-je[i],je:je[i],ga:ga[i]}));
     g.perTable.forEach(pt=>{ const st=tstat[pt.tid]; ['n','j','f','p','x','h','fa','fe','ja','je','ga'].forEach(k=>st[k]+=pt[k]); st.list.push({g,...pt});
@@ -972,7 +972,7 @@ const ae=(a,e,sh)=>sh?[a?`${a} ad.`:'',e?`${e} enf.`:''].filter(Boolean).join(' 
 const gMeals=g=>({fa:g.fondue-g.fondueE,fe:g.fondueE,ja:g.jambon-g.jambonE,je:g.jambonE,p:g.gratE,x:g.extra,ga:g.gratA});
 function mealChips(o,sh){ return (o.fa+o.fe?`<span class="meal f">Fondue ${o.fa+o.fe} : ${ae(o.fa,o.fe,sh)}</span>`:'')
   +(o.ja+o.je?`<span class="meal j">Jambon ${o.ja+o.je} : ${ae(o.ja,o.je,sh)}</span>`:'')
-  +(o.p?`<span class="meal p">${sh?`${o.p} -6 ans`:pl(o.p,'enfant')+' -6 ans (gratuit)'}</span>`:'')
+  +(o.p?`<span class="meal p">${sh?`+${o.p} -6 ans`:pl(o.p,'enfant')+' -6 ans (gratuit, sans chaise)'}</span>`:'')
   +(o.ga?`<span class="meal p">dont ${sh?`${o.ga} grat. ad.`:pl(o.ga,'adulte')+' gratuit'+(o.ga>1?'s':'')}</span>`:'')
   +(o.x?`<span class="meal x">+${o.x} chaise${o.x>1?'s':''}</span>`:''); }
 /* arrivées : nombre de personnes du groupe déjà là (compatible avec l'ancien format « heure ») */
@@ -1147,7 +1147,7 @@ function renderHome(){
     return `<button class="guest${full?' arrived':part?' partial':''}" data-k="${g.i}" role="option" style="animation-delay:${Math.min(k,12)*25}ms" ${k===sel?'aria-selected="true"':''}>
       <span class="av">${full?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg>':part?`${a.n}/${N}`:esc(ini)}</span>
       <span class="gtxt"><div class="gname">${hl(g.nom.toUpperCase(),words)} ${hl(g.pre,words)}</div>
-      <div class="gmeta">${g.size?`<span>${g.size} pers.${g.gratE?` dont ${g.gratE} -6 ans`:''}</span>`:''}${g.jambon?`<span class="nj">${g.jambon} jambon${g.jambon>1?'s':''}</span>`:''}${g.extra?`<span class="nx">+${g.extra} chaise${g.extra>1?'s':''}</span>`:''}${full?`<span style="color:var(--ok)">arrivé ${a.t}${a.by?' · '+esc(a.by):''}</span>`:''}${part?`<span style="color:var(--gold)">${a.n}/${N} là${a.by?' ('+esc(a.by)+')':''} · ${N-a.n} attendu${N-a.n>1?'s':''}</span>`:''}${unpaid(g)?'<span><i class="dot" style="background:var(--warn)"></i> paiement en attente</span>':''}</div></span>
+      <div class="gmeta">${g.size?`<span>${g.size} pers.${g.gratE?` + ${g.gratE} -6 ans`:''}</span>`:''}${g.jambon?`<span class="nj">${g.jambon} jambon${g.jambon>1?'s':''}</span>`:''}${g.extra?`<span class="nx">+${g.extra} chaise${g.extra>1?'s':''}</span>`:''}${full?`<span style="color:var(--ok)">arrivé ${a.t}${a.by?' · '+esc(a.by):''}</span>`:''}${part?`<span style="color:var(--gold)">${a.n}/${N} là${a.by?' ('+esc(a.by)+')':''} · ${N-a.n} attendu${N-a.n>1?'s':''}</span>`:''}${unpaid(g)?'<span><i class="dot" style="background:var(--warn)"></i> paiement en attente</span>':''}</div></span>
       <span class="chip${tl?' set':''}"><small>Table</small><b>${tl?esc(tl):'–'}</b></span></button>`;
   }).join(''):(guests.length?`<div class="empty"><b>Aucun résultat</b>Vérifier l'orthographe, ou chercher par prénom.</div>`:`<div class="empty"><b>Aucune réservation chargée</b>Clique sur le bandeau du haut et tape le code d'accès de l'équipe.</div>`);
   if(sel>=0) $('#list .guest[aria-selected]')?.scrollIntoView({block:'nearest'});
@@ -1196,7 +1196,7 @@ function openTable(id){ computeSeats(); const t=byId[id]; if(!t) return; const s
   $('#tdH').textContent=`Table ${t.label}`;
   $('#tdSub').innerHTML=`${st.n}/${t.seats} places${st.n>t.seats?' <b style="color:#F87171">· trop pleine</b>':''} · ${st.h} présent${st.h>1?'s':''} · ${ham[id].size?'avec jambon':'fondue seule'}`;
   $('#tdTiles').innerHTML=tile(st.fa,'fondue adultes','f')+tile(st.fe,'fondue enfants -12','f')+tile(caq,'caquelons','f')
-    +tile(st.ja,'jambon adultes','j')+tile(st.je,'jambon enfants -12','j')+tile(st.p,'-6 ans gratuits')+tile(st.ga,'dont gratuits adultes')+tile(st.x,'chaises en plus','x');
+    +tile(st.ja,'jambon adultes','j')+tile(st.je,'jambon enfants -12','j')+tile(st.p,'-6 ans (sans chaise)')+tile(st.ga,'dont gratuits adultes')+tile(st.x,'chaises en plus','x');
   $('#tdList').innerHTML=st.list.length?st.list.map(x=>{ const a=arrOf(x.g), N=x.g.size||1, split=x.g.perTable.length>1;
     return `<div class="tdr"><div class="tdn"><b>${esc(x.g.nom.toUpperCase())} ${esc(x.g.pre)}</b><span>${x.n} place${x.n>1?'s':''}${split?` ici (groupe de ${N} sur ${x.g.tables.map(q=>q.label).join(' · ')})`:''}${a?(a.n>=N?' · <i class="ok">✓ tous là</i>':` · <i class="pa">${a.n}/${N} là</i>`):''}</span></div>
       <div class="tdm">${mealChips(x)}</div>${x.g.note?`<div class="tdnote">${esc(x.g.note)}</div>`:''}</div>`; }).join(''):'<div class="tipe" style="padding:14px 0">Table libre.</div>';
@@ -1397,7 +1397,7 @@ function renderPlace(){
   $('#placeWarn').innerHTML=warn.join('<br>'); $('#placeWarn').hidden=!warn.length;
   const withX=guests.filter(g=>g.extra);
   $('#placeX').innerHTML=withX.length?`<b>${withX.reduce((a,g)=>a+g.extra,0)} chaise(s) / place(s) en plus</b> pour ${withX.length} réservation${withX.length>1?'s':''} : `+withX.map(g=>`${esc(g.nom)} ${esc(g.pre)} <span class="nx">+${g.extra}</span>${g.extraManual?' (manuel)':''}`).join(' · '):'Aucune chaise en plus détectée dans les remarques.';
-  $('#placeTbl').innerHTML=`<tr><th>Nom</th><th>Pers.</th><th>Infos</th><th title="Chaises / places en plus (lues dans les remarques, modifiables)">+ chaises</th><th style="width:210px">Table(s)</th></tr>`+list.map(g=>`<tr><td><b>${esc(g.nom.toUpperCase())}</b> ${esc(g.pre)}</td><td>${g.size}${g.gratE?` <span class="status">(dont ${g.gratE} -6 ans)</span>`:''}${g.jambon?` <span class="nj">(${g.jambon} J)</span>`:''}</td><td style="color:var(--muted)">${esc(g.note)}</td><td style="white-space:nowrap"><input class="fi xin" type="number" min="0" max="20" data-xkey="${esc(g.key)}" value="${g.extra}" title="${esc(g.extraWhy.join(', '))}"> <span class="status">${g.extraManual?'manuel':g.extraAuto?'remarque':''}</span></td><td>${g.fromSheet
+  $('#placeTbl').innerHTML=`<tr><th>Nom</th><th>Pers.</th><th>Infos</th><th title="Chaises / places en plus (lues dans les remarques, modifiables)">+ chaises</th><th style="width:210px">Table(s)</th></tr>`+list.map(g=>`<tr><td><b>${esc(g.nom.toUpperCase())}</b> ${esc(g.pre)}</td><td>${g.size}${g.gratE?` <span class="status">(+${g.gratE} -6 ans, sans chaise)</span>`:''}${g.jambon?` <span class="nj">(${g.jambon} J)</span>`:''}</td><td style="color:var(--muted)">${esc(g.note)}</td><td style="white-space:nowrap"><input class="fi xin" type="number" min="0" max="20" data-xkey="${esc(g.key)}" value="${g.extra}" title="${esc(g.extraWhy.join(', '))}"> <span class="status">${g.extraManual?'manuel':g.extraAuto?'remarque':''}</span></td><td>${g.fromSheet
     ?`<b>${esc(g.sheetTable)}</b> <span class="status">(sheet)</span>`
     :`<input class="fi" data-key="${esc(g.key)}" value="${esc(S.assign[g.key]||PLAN_FIX[hashStr(g.key)]||'')}" placeholder="ex. 12 · 12, 13 · 22:12, 21:14">${g.sheetBad?` <span class="status err">sheet : « ${esc(g.sheetTable)} » inconnue</span>`:!g.sheetTable&&PLAN_FIX[hashStr(g.key)]&&!S.assign[g.key]?' <span class="status">(d\'après la feuille)</span>':''}`}${g.overflow?' <span style="color:#F87171">⚠ trop de monde</span>':''}</td></tr>`).join('');
 }
@@ -1430,9 +1430,9 @@ function renderRecap(){
     return `<tr class="${st.n>t.seats?'over':''}" data-tid="${esc(t.id)}" style="cursor:pointer"><td><b>${esc(t.label)}</b></td><td>${st.n}/${t.seats}</td>${v(st.fa,'nf')}${v(st.fe,'nf')}<td class="nf"><b>${st.f||''}</b></td>${v(caqOf(t),'nf')}${v(st.ja,'nj')}${v(st.je,'nj')}<td class="nj"><b>${st.j||''}</b></td>${v(st.p)}${v(st.ga)}${v(st.x,'nx')}${v(st.h)}<td class="who">${st.list.map(x=>`${esc(x.g.nom)} ${esc(x.g.pre)} (${x.n} : ${cmp(x)})`).join(', ')}</td></tr>`; }).join('');
   const un=guests.filter(g=>!g.perTable?.length), U={}; K.forEach(k=>U[k]=0); un.forEach(g=>{ const m=gMeals(g); U.n+=g.places; U.f+=g.fondue; U.j+=g.jambon; U.p+=g.gratE; U.x+=g.extra; U.fa+=m.fa; U.fe+=m.fe; U.ja+=m.ja; U.je+=m.je; U.ga+=m.ga; });
   const uN=U.n, uF=U.f, uJ=U.j, uP=U.p, uX=U.x, caqT=ts.reduce((a,t)=>a+caqOf(t),0), A=k=>T[k]+U[k];
-  $('#recapTbl').innerHTML=`<thead><tr><th rowspan="2">Table</th><th rowspan="2">Places</th><th colspan="4" class="nf">Fondue</th><th colspan="3" class="nj">Jambon</th><th rowspan="2">-6 ans gratuits</th><th rowspan="2">dont gratuits adultes</th><th rowspan="2">Chaises en plus</th><th rowspan="2">Présents</th><th rowspan="2">Réservations <small style="font-weight:600;color:var(--muted)">(F = fondue · J = jambon · ad = adulte · enf = enfant -12)</small></th></tr>
+  $('#recapTbl').innerHTML=`<thead><tr><th rowspan="2">Table</th><th rowspan="2">Places</th><th colspan="4" class="nf">Fondue</th><th colspan="3" class="nj">Jambon</th><th rowspan="2">-6 ans (info, sans chaise)</th><th rowspan="2">dont gratuits adultes</th><th rowspan="2">Chaises en plus</th><th rowspan="2">Présents</th><th rowspan="2">Réservations <small style="font-weight:600;color:var(--muted)">(F = fondue · J = jambon · ad = adulte · enf = enfant -12)</small></th></tr>
     <tr><th class="nf">Adultes</th><th class="nf">-12 ans</th><th class="nf">Total</th><th class="nf">Caquelons</th><th class="nj">Adultes</th><th class="nj">-12 ans</th><th class="nj">Total</th></tr></thead><tbody>${rows}${un.length?`<tr class="un"><td>Non placées</td><td>${uN}</td>${v(U.fa,'nf')}${v(U.fe,'nf')}${v(uF,'nf')}<td></td>${v(U.ja,'nj')}${v(U.je,'nj')}${v(uJ,'nj')}${v(uP)}${v(U.ga)}${v(uX,'nx')}<td></td><td class="who">${un.map(g=>esc(g.nom)).join(', ')}</td></tr>`:''}</tbody><tfoot><tr><td>Total</td><td>${T.n+uN}/${T.seats}</td>${v(A('fa'),'nf')}${v(A('fe'),'nf')}${v(A('f'),'nf')}${v(caqT,'nf')}${v(A('ja'),'nj')}${v(A('je'),'nj')}${v(A('j'),'nj')}${v(A('p'))}${v(A('ga'))}${v(A('x'),'nx')}${v(T.h)}<td></td></tr></tfoot>`;
-  $('#recapTot').innerHTML=`<div class="kpi"><b>${T.f+uF}</b><span>fondues : ${A('fa')} adultes + ${A('fe')} enfants</span></div><div class="kpi"><b>${caqT}</b><span>caquelons (1 pour 6, par groupe)</span></div><div class="kpi"><b style="color:#F7B3C1">${T.j+uJ}</b><span>jambons : ${A('ja')} adultes + ${A('je')} enfants</span></div><div class="kpi"><b>${T.n+uN}</b><span>places (dont ${T.p+uP} -6 ans${S.ev.gratAExtra?` · ${guests.reduce((a,g)=>a+g.gratA,0)} gratuits adultes`:''} · ${T.x+uX} chaises en plus)</span></div><div class="kpi"><b>${ts.filter(t=>tstat[t.id].n).length} / ${ts.length}</b><span>tables occupées</span></div>${un.length?`<div class="kpi"><b style="color:#F87171">${un.length}</b><span>réservations non placées</span></div>`:''}`;
+  $('#recapTot').innerHTML=`<div class="kpi"><b>${T.f+uF}</b><span>fondues : ${A('fa')} adultes + ${A('fe')} enfants</span></div><div class="kpi"><b>${caqT}</b><span>caquelons (1 pour 6, par groupe)</span></div><div class="kpi"><b style="color:#F7B3C1">${T.j+uJ}</b><span>jambons : ${A('ja')} adultes + ${A('je')} enfants</span></div><div class="kpi"><b>${T.n+uN}</b><span>places assises (dont ${T.x+uX} chaises en plus) · + ${T.p+uP} enfants -6 ans sans chaise</span></div><div class="kpi"><b>${ts.filter(t=>tstat[t.id].n).length} / ${ts.length}</b><span>tables occupées</span></div>${un.length?`<div class="kpi"><b style="color:#F87171">${un.length}</b><span>réservations non placées</span></div>`:''}`;
 }
 $('#recapPrint').onclick=()=>{ renderRecap(); window.print(); };
 $('#recapTbl').addEventListener('click',e=>{ const r=e.target.closest('tr[data-tid]'); if(r) openTable(r.dataset.tid); });
@@ -1644,7 +1644,7 @@ function applyEv(){ const E=S.ev; $('#evKick').textContent=E.kick; $('#evT1').te
 function download(name,text,type){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; a.click(); }
 $('#bkExport').onclick=()=>download('accueil-fondue-sauvegarde.json',JSON.stringify({plan:S.plan,assign:S.assign,extra:S.extra,arrived:S.arrived,ev:S.ev,src:S.src,cols:S.cols},null,2),'application/json');
 $('#bkImport').onchange=e=>{ const f=e.target.files[0]; if(!f) return; f.text().then(t=>{ try{ Object.assign(S,JSON.parse(t)); save(); buildGuests(); applyEv(); renderAdmin(); toast('Sauvegarde importée'); }catch(err){ alert('Fichier invalide.'); } }); };
-$('#arrExport').onclick=()=>download('arrivees.csv','\ufeffNom;Prénom;Personnes;Dont -6 ans;Dont gratuits adultes;Chaises en plus;Arrivés;Fondue;Jambon;Table;Première arrivée;Dernière mise à jour\n'+guests.map(g=>{ const a=arrOf(g); return [g.nom,g.pre,g.size,g.gratE,S.ev.gratAExtra?g.gratA:0,g.extra,a?.n||0,g.fondue,g.jambon,tLabel(g),a?.t||'',a?.last||''].join(';'); }).join('\n'),'text/csv');
+$('#arrExport').onclick=()=>download('arrivees.csv','\ufeffNom;Prénom;Places assises;Enfants -6 ans (sans chaise);Dont gratuits adultes;Chaises en plus;Arrivés;Fondue;Jambon;Table;Première arrivée;Dernière mise à jour\n'+guests.map(g=>{ const a=arrOf(g); return [g.nom,g.pre,g.size,g.gratE,S.ev.gratAExtra?g.gratA:0,g.extra,a?.n||0,g.fondue,g.jambon,tLabel(g),a?.t||'',a?.last||''].join(';'); }).join('\n'),'text/csv');
 function resetSoiree(){ const ts=Date.now(); S.arrived={}; S.resetTs=ts; S.reset2=true; save(); calls.clear(); computeSeats(); renderHome(); scheduleRelayRender(); relaySend({t:'reset'}); toast('Arrivées remises à zéro sur tous les appareils'); }
 $('#arrReset').onclick=()=>{ if(confirm('Remettre à zéro toutes les arrivées pointées, sur tous les téléphones ?')) resetSoiree(); };
 
@@ -1685,7 +1685,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-21.15';
+const APP_V='2026-10-21.16';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) { const q=new URLSearchParams(location.search); q.set('v',m[1]); location.replace(location.pathname+'?'+q.toString()+location.hash); } }catch(e){} })();
