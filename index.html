@@ -830,12 +830,14 @@ function resizeImage(file,max,cb){ const r=new FileReader(); r.onload=()=>{ cons
 /* ================= Données ================= */
 let lastHere={};
 let guests=[], occ={}, byId={}, tstat={}, ham={}, xtra={}, hereSeats={}, hasMeals=false;
+/* « 22:12, 21:14 » ou « 22 (12) » : nombre de personnes voulu par table */
+function tableQuotas(str){ const q={}; String(str||'').split(/[,;\/+&]|\bet\b/i).forEach(p=>{ const m=p.trim().replace(/^table\s*/i,'').match(/^([\w-]+)\s*(?::|\()\s*(\d+)/); if(m) q[norm(m[1])]=+m[2]; }); return q; }
 function parseTables(str){
   const out=[];
   String(str||'').split(/[,;\/+&]|\bet\b/i).map(s=>s.trim()).filter(Boolean).forEach(p=>{
     const m=p.match(/^(\d+)\s*-\s*(\d+)$/);
     if(m&&+m[2]>+m[1]&&+m[2]-+m[1]<10){ for(let k=+m[1];k<=+m[2];k++) out.push(String(k)); }
-    else out.push(p.replace(/^table\s*/i,''));
+    else out.push(p.replace(/^table\s*/i,'').replace(/\s*[:(].*$/,'').trim());
   });
   return out;
 }
@@ -873,7 +875,7 @@ function extrasFromNote(note){
 /* caquelons : 1 pour 6 fondues max, chaque groupe a les siens */
 const caqOf=t=>(tstat[t.id]?.list||[]).reduce((a,x)=>a+Math.ceil((x.f||0)/6),0);
 /* corrections d'après la feuille dessinée du 21/10 quand le sheet est vide ou faux (clé = empreinte du nom, pas de nom en clair dans le code) */
-const PLAN_FIX={'123826758':'22, 21','-678095414':'6'};
+const PLAN_FIX={'123826758':'22:12, 21:14','-678095414':'6'};
 /* répartit un total entier au prorata (plus forts restes) */
 function distribute(total,weights){ const W=weights.reduce((a,b)=>a+b,0); if(!W||!total) return weights.map(()=>0);
   const raw=weights.map(w=>total*w/W), fl=raw.map(Math.floor); let rem=total-fl.reduce((a,b)=>a+b,0);
@@ -889,11 +891,13 @@ function computeSeats(){
     const src=sheetOk?g.sheetTable:(S.assign[g.key]||PLAN_FIX[hashStr(g.key)]||g.sheetTable||''); g.fromSheet=!!sheetOk; g.sheetBad=!!(g.sheetTable&&!sheetOk);
     g.tables=parseTables(src).map(l=>byLabel[norm(l)]||{id:null,label:l});
     g.extraManual=S.extra[g.key]!=null; g.extra=g.extraManual?Math.max(0,+S.extra[g.key]||0):(g.extraAuto||0); g.places=g.size+g.extra;
-    g.seats=[]; let left=g.places||1;
-    g.tables.forEach(t=>{ if(!t.id) return; const a=occ[t.id]; for(let s=0;s<a.length&&left>0;s++) if(!a[s]){a[s]=g.key; g.seats.push({tid:t.id,s}); left--;} });
+    g.seats=[]; let left=g.places||1; const quota=tableQuotas(src), hasQ=Object.keys(quota).length>0, want={};
+    g.tables.forEach(t=>{ if(!t.id) return; let q=hasQ&&quota[norm(t.label)]!=null?Math.min(quota[norm(t.label)],left):left; want[t.id]=q; const a=occ[t.id]; for(let s=0;s<a.length&&q>0&&left>0;s++) if(!a[s]){a[s]=g.key; g.seats.push({tid:t.id,s}); left--; q--;} if(hasQ&&quota[norm(t.label)]!=null){ left-=q; want[t.id]-=0; } });
+    if(hasQ) left=Math.max(0,(g.places||1)-Object.values(want).reduce((a,b)=>a+b,0)-0);
     g.overflow=left>0&&g.tables.some(t=>t.id);
     // répartition par table : personnes, jambons, petits gratuits, présents
-    const tids=[...new Set(g.seats.map(x=>x.tid))], cnt=tids.map(id=>g.seats.filter(x=>x.tid===id).length);
+    const tids=hasQ?Object.keys(want).filter(id=>want[id]>0):[...new Set(g.seats.map(x=>x.tid))], cnt=tids.map(id=>hasQ?want[id]:g.seats.filter(x=>x.tid===id).length);
+    if(hasQ) g.overflow=tids.some((id,i)=>cnt[i]>g.seats.filter(x=>x.tid===id).length);
     if(left>0&&tids.length) cnt[cnt.length-1]+=left;
     const tot=cnt.reduce((a,b)=>a+b,0), jam=distribute(Math.min(g.jambon,tot),cnt), pet=distribute(Math.min(g.gratE,tot),cnt), xs=distribute(Math.min(g.extra,tot),cnt), here=distribute(Math.min(arrOf(g)?.n||0,tot),cnt);
     g.perTable=tids.map((id,i)=>({tid:id,n:cnt[i],j:jam[i],f:Math.max(0,cnt[i]-jam[i]-pet[i]-xs[i]),p:pet[i],x:xs[i],h:here[i]}));
@@ -1307,7 +1311,7 @@ function renderPlace(){
   $('#placeX').innerHTML=withX.length?`<b>${withX.reduce((a,g)=>a+g.extra,0)} chaise(s) / place(s) en plus</b> pour ${withX.length} réservation${withX.length>1?'s':''} : `+withX.map(g=>`${esc(g.nom)} ${esc(g.pre)} <span class="nx">+${g.extra}</span>${g.extraManual?' (manuel)':''}`).join(' · '):'Aucune chaise en plus détectée dans les remarques.';
   $('#placeTbl').innerHTML=`<tr><th>Nom</th><th>Pers.</th><th>Infos</th><th title="Chaises / places en plus (lues dans les remarques, modifiables)">+ chaises</th><th style="width:210px">Table(s)</th></tr>`+list.map(g=>`<tr><td><b>${esc(g.nom.toUpperCase())}</b> ${esc(g.pre)}</td><td>${g.size}${g.gratE?` <span class="status">(dont ${g.gratE} -6 ans)</span>`:''}${g.jambon?` <span class="nj">(${g.jambon} J)</span>`:''}</td><td style="color:var(--muted)">${esc(g.note)}</td><td style="white-space:nowrap"><input class="fi xin" type="number" min="0" max="20" data-xkey="${esc(g.key)}" value="${g.extra}" title="${esc(g.extraWhy.join(', '))}"> <span class="status">${g.extraManual?'manuel':g.extraAuto?'remarque':''}</span></td><td>${g.fromSheet
     ?`<b>${esc(g.sheetTable)}</b> <span class="status">(sheet)</span>`
-    :`<input class="fi" data-key="${esc(g.key)}" value="${esc(S.assign[g.key]||PLAN_FIX[hashStr(g.key)]||'')}" placeholder="ex. 12 ou 12, 13">${g.sheetBad?` <span class="status err">sheet : « ${esc(g.sheetTable)} » inconnue</span>`:!g.sheetTable&&PLAN_FIX[hashStr(g.key)]&&!S.assign[g.key]?' <span class="status">(d\'après la feuille)</span>':''}`}${g.overflow?' <span style="color:#F87171">⚠ trop de monde</span>':''}</td></tr>`).join('');
+    :`<input class="fi" data-key="${esc(g.key)}" value="${esc(S.assign[g.key]||PLAN_FIX[hashStr(g.key)]||'')}" placeholder="ex. 12 · 12, 13 · 22:12, 21:14">${g.sheetBad?` <span class="status err">sheet : « ${esc(g.sheetTable)} » inconnue</span>`:!g.sheetTable&&PLAN_FIX[hashStr(g.key)]&&!S.assign[g.key]?' <span class="status">(d\'après la feuille)</span>':''}`}${g.overflow?' <span style="color:#F87171">⚠ trop de monde</span>':''}</td></tr>`).join('');
 }
 $('#placeQ').oninput=renderPlace;
 function startDemo(){
@@ -1588,7 +1592,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-21.4';
+const APP_V='2026-10-21.5';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) { const q=new URLSearchParams(location.search); q.set('v',m[1]); location.replace(location.pathname+'?'+q.toString()+location.hash); } }catch(e){} })();
