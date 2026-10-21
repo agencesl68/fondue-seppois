@@ -312,7 +312,7 @@ table.data th{color:var(--muted);font-weight:800;font-size:11px;text-transform:u
 .tip li{display:flex;justify-content:space-between;gap:10px}.tip li em{font-style:normal;color:var(--muted);white-space:nowrap}
 .tipe{color:var(--muted);margin-top:4px}
 .arrbox{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.arrbox .stepper{order:1;flex:none}.arrbox #rAll,.arrbox #rSend{order:2;min-width:250px;justify-content:center}.arrbox .arrinfo,.arrbox .rplaceur{order:3}
+.arrbox #rAll{order:1;min-width:210px;justify-content:center}.arrbox .stepper{order:2;flex:none}.arrbox #rSend{order:3;justify-content:center}.arrbox .arrinfo,.arrbox .rplaceur{order:4}
 .stepper{display:flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:var(--surface);border:1px solid var(--line-2);min-height:56px}
 .stp{width:48px;height:48px;border-radius:12px;border:0;background:rgba(255,255,255,.07);font:400 28px/1 Anton;color:var(--ink);transition:background .15s,transform .15s var(--ease)}
 .stp:hover:not([disabled]){background:rgba(255,201,60,.2)}.stp:active:not([disabled]){transform:scale(.9)}.stp[disabled]{opacity:.3;cursor:default}
@@ -1194,7 +1194,7 @@ function replayRoute(){ const ids=cur.tables.map(t=>t.id).filter(Boolean); if(!i
   routeInfo=null; const route=routeTo(byId[ids[0]]), rd=routeInfo?.dur||1.4, bp=$('.bigplan'); bp.style.setProperty('--rd',rd+'s'); bp.style.setProperty('--arr',(.7+rd).toFixed(2)+'s');
   renderPlan(svg,{hit:new Set(ids),guest:cur.key,you:true,dim:true,meals:true,route}); choreo(ids); }
 function updArrive(bump){ const N=cur.size||1, a=arrOf(cur), n=a?.n||0, left=N-n, b=$('#rAll'), d=draftN, sb=$('#rSend');
-  sb.hidden=d===n; b.hidden=d!==n; sb.innerHTML=d>n?`${CK}Valider et envoyer au placeur (${d-n})`:`${CK}Valider : ${d} arrivé${d>1?'s':''}`;
+  sb.hidden=d===n; sb.innerHTML=d>n?`${CK}Valider et envoyer au placeur (${d-n})`:`${CK}Valider : ${d} arrivé${d>1?'s':''}`;
   b.disabled=n>=N; b.className='btn '+(n>=N?'done':'go');
   b.innerHTML=n>=N?`${CK}Groupe complet`:n?`${CK}Les ${left} restant${left>1?'s':''} sont là`:(N>1?`${CK}Les ${N} sont là`:`${CK}Arrivé`);
   $('#rCount').textContent=d; $('#rOf').textContent=`/ ${N} arrivé${N>1?'s':''}`; $('#rMinus').disabled=d<=0; $('#rPlus').disabled=d>=N;
@@ -1593,7 +1593,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-21.7';
+const APP_V='2026-10-21.8';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) { const q=new URLSearchParams(location.search); q.set('v',m[1]); location.replace(location.pathname+'?'+q.toString()+location.hash); } }catch(e){} })();
