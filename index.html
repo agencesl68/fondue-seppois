@@ -499,6 +499,46 @@ input[type=range]{width:100%;accent-color:var(--gold)}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .route{stroke-dashoffset:0}
 }
+
+/* ================= Téléphone & tablette : onglets en bas, liste groupée, fiche plus nette ================= */
+.tabbar{display:none}
+@media (max-width:900px){
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;gap:8px;padding:8px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:rgba(9,11,32,.94);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line-2)}
+  .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;border:0;border-radius:14px;background:transparent;color:var(--muted);font:800 14px Manrope;transition:background .2s,color .2s}
+  .tabbar button span{display:flex;align-items:center;gap:7px}
+  .tabbar button small{font-size:11.5px;font-weight:700;color:var(--dim)}
+  .tabbar button.on{background:rgba(255,201,60,.13);color:var(--gold)}
+  .tabbar button.on small{color:rgba(255,201,60,.75)}
+  body:has(#q:focus) .tabbar{display:none}
+  .home{padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))!important}
+  body[data-view="list"] .home .plancard{display:none}
+  body[data-view="plan"] .home .col{display:none}
+  body[data-view="plan"] .home .plancard{display:flex;height:calc(100dvh - 200px)!important;min-height:420px}
+  body[data-view="plan"] .planbody{min-height:0}
+  body[data-view="plan"] .planbody svg{height:100%}
+  /* liste groupée, comme les réglages d'un téléphone */
+  .list{gap:0;background:rgba(14,16,46,.9);border:1px solid var(--line);border-radius:20px;padding:2px 0;overflow:hidden}
+  .guest{border:0;border-radius:0;background:transparent;border-bottom:1px solid rgba(255,201,60,.1);padding:12px 14px;animation-duration:.3s}
+  .guest:last-child{border-bottom:0}
+  .guest:hover,.guest[aria-selected]{background:rgba(255,201,60,.08);transform:none}
+  .chip{min-width:52px;padding:3px 9px;border-radius:12px}
+  .letters button{border-radius:12px}
+  /* fiche d'un groupe */
+  .ov .tbox{align-self:stretch;text-align:center;padding:14px 20px 12px}
+  .ov .tbox small{font-size:15px}
+  .ov .stepper{min-height:54px;padding:3px}
+  .ov .stp{width:48px;height:48px}
+  .ov .cnt{min-width:62px}.ov .cnt b{font-size:28px}
+  .ov .arrbox #rAll,.ov .arrbox #rSend{font-size:16px;padding:10px 12px;white-space:normal;line-height:1.15;border-radius:16px}
+  .ov .acts{gap:8px}
+}
+@media (max-width:700px){
+  header{padding-bottom:4px!important}
+  .demo{font-size:12.5px;line-height:1.45;padding:8px 12px;margin-bottom:8px}
+  .ov .welcome{font-size:24px}.ov .who{font-size:32px}
+  .ov .tbox .num{font-size:96px}.ov .tbox.multi .num{font-size:72px;white-space:nowrap}
+  .note{font-size:20px;padding:8px 14px}
+}
 </style>
 </head>
 <body>
@@ -562,6 +602,10 @@ input[type=range]{width:100%;accent-color:var(--gold)}
     </section>
   </div>
 
+  <nav class="tabbar" id="tabbar" aria-label="Affichage">
+    <button data-v="list" class="on"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M17 14.6c2.4.2 4 1.8 4.5 4.4"/></svg>Invités</span><small id="tbList"></small></button>
+    <button data-v="plan"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h5M7 13h5M15 9v6"/></svg>Plan</span><small>de la salle</small></button>
+  </nav>
   <section class="pv" id="pv" hidden>
     <div class="pvhead"><span class="ttlp">Placeurs</span><span class="pvst" id="pvState"></span><button class="btn ghost sm" id="pvName"></button><button class="btn ghost sm" id="pvSound"></button></div>
     <button class="pvarm" id="pvArm" hidden>Touchez ici pour activer la sirène et les alertes</button>
@@ -1171,8 +1215,12 @@ function updKpis(){
   $('#kPers').textContent=`${pers} / ${tot}`;
   $('#kArrBar').style.width=(guests.length?complete/guests.length*100:0)+'%'; $('#kPersBar').style.width=(tot?pers/tot*100:0)+'%';
   if(S.lastSync) $('#kSyncT').textContent=S.lastSync;
+  const tb=$('#tbList'); if(tb) tb.textContent=`${pers} / ${tot} là`;
 }
-$('#q').addEventListener('input',()=>{ letter=''; sel=-1; renderHome(); });
+$('#q').addEventListener('input',()=>{ letter=''; sel=-1; if(document.body.dataset.view==='plan') setView('list'); renderHome(); });
+function setView(v){ document.body.dataset.view=v; document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.v===v)); }
+$('#tabbar').addEventListener('click',e=>{ const b=e.target.closest('button[data-v]'); if(!b) return; setView(b.dataset.v); window.scrollTo({top:0}); });
+setView('list');
 $('#qClear').onclick=()=>{ $('#q').value=''; renderHome(); $('#q').focus(); };
 $('#letters').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; letter=letter===b.dataset.l?'':b.dataset.l; $('#q').value=''; sel=-1; renderHome(); });
 $('#list').addEventListener('click',e=>{ const b=e.target.closest('.guest'); if(b) openGuest(guests.find(g=>g.i==b.dataset.k)); });
@@ -1685,7 +1733,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-21.19';
+const APP_V='2026-10-21.20';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) { const q=new URLSearchParams(location.search); q.set('v',m[1]); location.replace(location.pathname+'?'+q.toString()+location.hash); } }catch(e){} })();
