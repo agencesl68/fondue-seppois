@@ -771,15 +771,18 @@ const DEFAULT_LOGO='data:image/webp;base64,UklGRtiIAABXRUJQVlA4WAoAAAAQAAAAZwEAZ
 const SHEET=''; // le lien du Google Sheet n'est pas dans le code (dépôt public) : il se colle dans Réglages → Source et reste enregistré sur l'ordi
 
 function defaultPlan(){
-  // 24 grandes tables de 24 places (12 de chaque côté), numérotées comme dans le sheet : de gauche à droite puis de haut en bas
-  const tables=[]; let n=1; const cols=[260,680,1120,1540], rows=[540,660,780,900,1020,1140];
-  rows.forEach(y=>cols.forEach(x=>{ tables.push({id:'t'+n,label:String(n),x,y,w:380,h:58,rot:0,seats:24}); n++; }));
-  return { w:1800, h:1390, bg:null, bgOp:.5, tables, zones:[
-    {id:'z1',kind:'scene', label:'Scène',             x:900, y:105, w:700,h:90, rot:0},
-    {id:'z2',kind:'piste', label:'Piste',             x:900, y:310, w:560,h:240,rot:0},
-    {id:'z3',kind:'bar',   label:'Bar',               x:300, y:1290,w:420,h:84, rot:0},
-    {id:'z4',kind:'fondue',label:'Préparateur fondue',x:1500,y:1290,w:440,h:84, rot:0},
-    {id:'z5',kind:'entry', label:'Entrée',            x:900, y:1340,w:240,h:60, rot:0},
+  // Plan dessiné de la salle (feuille du 21/10) : 3 colonnes de grandes tables de 24 inclinées,
+  // 22→15 à gauche, 14→8 au milieu, 7→1 à droite ; DJ en haut à droite, Saloon + Bar en bas à gauche, entrée à droite.
+  const tables=[], T=(label,x,y)=>tables.push({id:'t'+label,label:String(label),x,y,w:380,h:58,rot:10,seats:24});
+  [22,21,20,19,18,17,16,15].forEach((l,i)=>T(l,470,220+i*112));
+  [14,13,12,11,10,9,8].forEach((l,i)=>T(l,960,390+i*112));
+  [7,6,5,4,3,2,1].forEach((l,i)=>T(l,1430,500+i*112));
+  return { w:1800, h:1640, bg:null, bgOp:.5, tables, zones:[
+    {id:'z1',kind:'scene', label:'DJ',          x:1620,y:120, w:300,h:150,rot:0},
+    {id:'z2',kind:'piste', label:'Saloon',      x:470, y:1390,w:860,h:300,rot:0},
+    {id:'z3',kind:'bar',   label:'Bar',         x:470, y:1585,w:820,h:70, rot:0},
+    {id:'z4',kind:'other', label:'Entrée 400',  x:1200,y:1590,w:260,h:60, rot:0},
+    {id:'z5',kind:'entry', label:'Entrée',      x:1660,y:1450,w:220,h:60, rot:0},
   ]};
 }
 const hadStored=(()=>{ try{ return !!JSON.parse(localStorage.getItem(LS))?.plan; }catch(e){ return false; } })();
@@ -867,6 +870,8 @@ function extrasFromNote(note){
       const m=seg.match(/(\d+|une?|deux|trois|quatre|cinq)\s+(chaise|place|siege)/), k=m?(NUMW[m[1]]||parseInt(m[1],10)||1):1; n+=k; why.push(`${k} ${/chaise/.test(seg)?'chaise':'place'}${k>1?'s':''} en plus`); } });
   return {n,why};
 }
+/* caquelons : 1 pour 6 fondues max, chaque groupe a les siens */
+const caqOf=t=>(tstat[t.id]?.list||[]).reduce((a,x)=>a+Math.ceil((x.f||0)/6),0);
 /* répartit un total entier au prorata (plus forts restes) */
 function distribute(total,weights){ const W=weights.reduce((a,b)=>a+b,0); if(!W||!total) return weights.map(()=>0);
   const raw=weights.map(w=>total*w/W), fl=raw.map(Math.floor); let rem=total-fl.reduce((a,b)=>a+b,0);
@@ -888,7 +893,7 @@ function computeSeats(){
     if(left>0&&tids.length) cnt[cnt.length-1]+=left;
     const tot=cnt.reduce((a,b)=>a+b,0), jam=distribute(Math.min(g.jambon,tot),cnt), pet=distribute(Math.min(g.gratE,tot),cnt), xs=distribute(Math.min(g.extra,tot),cnt), here=distribute(Math.min(arrOf(g)?.n||0,tot),cnt);
     g.perTable=tids.map((id,i)=>({tid:id,n:cnt[i],j:jam[i],f:Math.max(0,cnt[i]-jam[i]-pet[i]-xs[i]),p:pet[i],x:xs[i],h:here[i]}));
-    g.perTable.forEach(pt=>{ const st=tstat[pt.tid]; st.n+=pt.n; st.j+=pt.j; st.f+=pt.f; st.p+=pt.p; st.x+=pt.x; st.h+=pt.h; st.list.push({g,n:pt.n,j:pt.j});
+    g.perTable.forEach(pt=>{ const st=tstat[pt.tid]; st.n+=pt.n; st.j+=pt.j; st.f+=pt.f; st.p+=pt.p; st.x+=pt.x; st.h+=pt.h; st.list.push({g,n:pt.n,j:pt.j,f:pt.f});
       const mine=g.seats.filter(x=>x.tid===pt.tid).map(x=>x.s); mine.slice(Math.max(0,mine.length-pt.j)).forEach(x=>ham[pt.tid].add(x)); mine.slice(0,pt.x).forEach(x=>xtra[pt.tid].add(x)); mine.slice(0,pt.h).forEach(x=>hereSeats[pt.tid].add(x)); });
   });
 }
@@ -1099,7 +1104,7 @@ $('#demo').onclick=()=>{ if(S.src.url){ openAdmin('pSource'); $('#srcUrl').focus
 $('#homePlan').addEventListener('mousemove',e=>{ const gEl=e.target.closest('.t'), tip=$('#tip'); if(!gEl){ tip.hidden=true; return; }
   const t=byId[gEl.dataset.id]; if(!t) return; const st=tstat[t.id], used=occ[t.id].filter(Boolean).length;
   tip.innerHTML=`<div class="tiph"><b class="tn">Table ${esc(t.label)}</b><span>${used}/${t.seats} places</span></div>
-    ${st.n?`<div class="tipm"><span class="meal f">Fondue ${st.f}</span>${st.j?`<span class="meal j">Jambon ${st.j}</span>`:''}${st.p?`<span class="meal p">+${st.p} -6 ans</span>`:''}${st.x?`<span class="meal x">+${st.x} en plus</span>`:''}</div>`:''}
+    ${st.n?`<div class="tipm"><span class="meal f">Fondue ${st.f} · ${caqOf(t)} caquelon${caqOf(t)>1?'s':''}</span>${st.j?`<span class="meal j">Jambon ${st.j}</span>`:''}${st.p?`<span class="meal p">+${st.p} -6 ans</span>`:''}${st.x?`<span class="meal x">+${st.x} en plus</span>`:''}</div>`:''}
     ${st.list.length?`<ul>${st.list.map(x=>{ const a=arrOf(x.g), N=x.g.size||1; return `<li><span>${esc(x.g.nom.toUpperCase())} ${esc(x.g.pre)}</span><em>${x.n} pl.${a?(a.n>=N?' · ✓ là':` · ${a.n}/${N} là`):''}</em></li>`; }).join('')}</ul>`:'<div class="tipe">Table libre</div>'}`;
   tip.hidden=false; const card=$('.plancard').getBoundingClientRect(), tr=tip.getBoundingClientRect();
   let x=e.clientX-card.left+18, y=e.clientY-card.top+18; if(x+tr.width>card.width-8) x=e.clientX-card.left-tr.width-18; if(y+tr.height>card.height-8) y=Math.max(8,e.clientY-card.top-tr.height-18);
@@ -1324,10 +1329,10 @@ function renderRecap(){
   const ts=[...S.plan.tables].sort((a,b)=>(parseInt(a.label)||1e9)-(parseInt(b.label)||1e9)||String(a.label).localeCompare(String(b.label)));
   const T={seats:0,n:0,f:0,j:0,p:0,x:0,h:0};
   const rows=ts.map(t=>{ const st=tstat[t.id]; T.seats+=+t.seats||0; ['n','f','j','p','x','h'].forEach(k=>T[k]+=st[k]);
-    return `<tr class="${st.n>t.seats?'over':''}"><td><b>${esc(t.label)}</b></td><td>${st.n}/${t.seats}</td><td class="nf">${st.f||''}</td><td class="nj">${st.j||''}</td><td>${st.p||''}</td><td class="nx">${st.x||''}</td><td>${st.h||''}</td><td class="who">${st.list.map(x=>`${esc(x.g.nom)} ${esc(x.g.pre)} (${x.n})`).join(', ')}</td></tr>`; }).join('');
+    return `<tr class="${st.n>t.seats?'over':''}"><td><b>${esc(t.label)}</b></td><td>${st.n}/${t.seats}</td><td class="nf">${st.f||''}</td><td class="nf">${caqOf(t)||''}</td><td class="nj">${st.j||''}</td><td>${st.p||''}</td><td class="nx">${st.x||''}</td><td>${st.h||''}</td><td class="who">${st.list.map(x=>`${esc(x.g.nom)} ${esc(x.g.pre)} (${x.n})`).join(', ')}</td></tr>`; }).join('');
   const un=guests.filter(g=>!g.perTable?.length), uN=un.reduce((s,g)=>s+g.places,0), uF=un.reduce((s,g)=>s+g.fondue,0), uJ=un.reduce((s,g)=>s+g.jambon,0), uP=un.reduce((s,g)=>s+g.gratE,0), uX=un.reduce((s,g)=>s+g.extra,0);
-  $('#recapTbl').innerHTML=`<thead><tr><th>Table</th><th>Personnes / places</th><th>Fondue</th><th>Jambon</th><th>-6 ans gratuits</th><th>Chaises en plus</th><th>Présents</th><th>Réservations</th></tr></thead><tbody>${rows}${un.length?`<tr class="un"><td>Non placées</td><td>${uN}</td><td class="nf">${uF||''}</td><td class="nj">${uJ||''}</td><td>${uP||''}</td><td class="nx">${uX||''}</td><td></td><td class="who">${un.map(g=>esc(g.nom)).join(', ')}</td></tr>`:''}</tbody><tfoot><tr><td>Total</td><td>${T.n+uN}/${T.seats}</td><td class="nf">${T.f+uF}</td><td class="nj">${T.j+uJ}</td><td>${T.p+uP||''}</td><td class="nx">${T.x+uX||''}</td><td>${T.h||''}</td><td></td></tr></tfoot>`;
-  $('#recapTot').innerHTML=`<div class="kpi"><b>${T.f+uF}</b><span>fondues</span></div><div class="kpi"><b style="color:#F7B3C1">${T.j+uJ}</b><span>jambons</span></div><div class="kpi"><b>${T.n+uN}</b><span>places (dont ${T.p+uP} -6 ans${S.ev.gratAExtra?` · ${guests.reduce((a,g)=>a+g.gratA,0)} gratuits adultes`:''} · ${T.x+uX} chaises en plus)</span></div><div class="kpi"><b>${ts.filter(t=>tstat[t.id].n).length} / ${ts.length}</b><span>tables occupées</span></div>${un.length?`<div class="kpi"><b style="color:#F87171">${un.length}</b><span>réservations non placées</span></div>`:''}`;
+  $('#recapTbl').innerHTML=`<thead><tr><th>Table</th><th>Personnes / places</th><th>Fondue</th><th>Caquelons</th><th>Jambon</th><th>-6 ans gratuits</th><th>Chaises en plus</th><th>Présents</th><th>Réservations</th></tr></thead><tbody>${rows}${un.length?`<tr class="un"><td>Non placées</td><td>${uN}</td><td class="nf">${uF||''}</td><td></td><td class="nj">${uJ||''}</td><td>${uP||''}</td><td class="nx">${uX||''}</td><td></td><td class="who">${un.map(g=>esc(g.nom)).join(', ')}</td></tr>`:''}</tbody><tfoot><tr><td>Total</td><td>${T.n+uN}/${T.seats}</td><td class="nf">${T.f+uF}</td><td class="nf">${ts.reduce((a,t)=>a+caqOf(t),0)}</td><td class="nj">${T.j+uJ}</td><td>${T.p+uP||''}</td><td class="nx">${T.x+uX||''}</td><td>${T.h||''}</td><td></td></tr></tfoot>`;
+  $('#recapTot').innerHTML=`<div class="kpi"><b>${T.f+uF}</b><span>fondues</span></div><div class="kpi"><b>${ts.reduce((a,t)=>a+caqOf(t),0)}</b><span>caquelons (1 pour 6, par groupe)</span></div><div class="kpi"><b style="color:#F7B3C1">${T.j+uJ}</b><span>jambons</span></div><div class="kpi"><b>${T.n+uN}</b><span>places (dont ${T.p+uP} -6 ans${S.ev.gratAExtra?` · ${guests.reduce((a,g)=>a+g.gratA,0)} gratuits adultes`:''} · ${T.x+uX} chaises en plus)</span></div><div class="kpi"><b>${ts.filter(t=>tstat[t.id].n).length} / ${ts.length}</b><span>tables occupées</span></div>${un.length?`<div class="kpi"><b style="color:#F87171">${un.length}</b><span>réservations non placées</span></div>`:''}`;
 }
 $('#recapPrint').onclick=()=>{ renderRecap(); window.print(); };
 $('#placeTbl').addEventListener('change',e=>{
@@ -1519,7 +1524,7 @@ $('#tSpread').onclick=()=>{ const s=selected(); if(s.length<3) return toast('Sé
   mutate(()=>sorted.forEach((o,i)=>o[ax]=G(a0+(a1-a0)*i/(sorted.length-1)))); };
 $('#renum').onclick=()=>{ if(!confirm('Renuméroter toutes les tables de gauche à droite, puis de haut en bas ?\nAttention : les numéros saisis dans « Placement » ou dans le sheet ne suivront pas.')) return;
   mutate(()=>{ [...S.plan.tables].sort((a,b)=>Math.round(a.x/60)-Math.round(b.x/60)||a.y-b.y).forEach((t,i)=>t.label=String(i+1)); }); };
-$('#planReset').onclick=()=>{ if(confirm('Remplacer le plan actuel par le plan par défaut (24 grandes tables de 24 places) ?')) mutate(()=>{ const bg=S.plan.bg; S.plan=defaultPlan(); S.plan.bg=bg; selIds=new Set(); }); };
+$('#planReset').onclick=()=>{ if(confirm('Remplacer le plan actuel par le plan dessiné de la salle (22 grandes tables de 24 places) ?')) mutate(()=>{ const bg=S.plan.bg; S.plan=defaultPlan(); S.plan.bg=bg; selIds=new Set(); }); };
 $('#pW').addEventListener('change',e=>mutate(()=>S.plan.w=Math.max(400,+e.target.value||1800)));
 $('#pH').addEventListener('change',e=>mutate(()=>S.plan.h=Math.max(300,+e.target.value||1100)));
 $('#bgFile').onchange=e=>{ const f=e.target.files[0]; if(f) resizeImage(f,1800,url=>{ S.plan.bg=url; save(); renderEditor(); toast('Calque importé'); }); };
@@ -1579,7 +1584,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-21.1';
+const APP_V='2026-10-21.3';
 (async()=>{ if(!/^https?:$/.test(location.protocol)) return;
   try{ const t=await (await fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})).text(), m=t.match(/const APP_V='([^']+)'/);
     if(m&&m[1]!==APP_V) { const q=new URLSearchParams(location.search); q.set('v',m[1]); location.replace(location.pathname+'?'+q.toString()+location.hash); } }catch(e){} })();
@@ -1791,7 +1796,10 @@ buildGuests(); applyEv(); renderHome(); $('#q').focus(); setMode(S.mode); render
 if(DEMO&&S.mode!=='placeur'&&!S.accName) setTimeout(()=>askName('accueil'),600);
 if(DEMO){ connectRelay(); $('#demoBar').hidden=false; $('#demoBar').innerHTML='<b>DÉMO</b> — réservations fictives pour découvrir l\'app : cherche un nom (ex. « Petit », « Durand »), valide les arrivées, et ouvre la démo placeur sur un téléphone : <b>agencesl68.github.io/fondue-seppois/?demo&placeur</b>'; }
 else applyHash().then(done=>{ if(!done){ fetchSheet(false); scheduleRefresh(); } if(!S.src.url) askCode(); else { connectRelay(); if(S.mode!=='placeur'){ offerSeven(); if(!S.accName) askName('accueil'); } }
-  if(!S.fix24&&S.mode!=='placeur') setTimeout(()=>{ if(S.fix24) return; S.fix24=true; save();
+  if(!S.planV2&&S.mode!=='placeur'&&!DEMO) setTimeout(()=>{ if(S.planV2) return; S.planV2=true; S.fix24=true; save();
+    if(confirm("Nouveau : le plan de la salle d'après ta feuille dessinée (22 grandes tables de 24, DJ, Saloon, Bar, entrée).\nRemplacer ton plan actuel par celui-ci ?\n\nTon plan actuel est gardé (Réglages → Plan de salle → « Revenir au plan d'avant »).")){
+      try{ localStorage.setItem(BK7,JSON.stringify(S.plan)); }catch(e){} S.plan=defaultPlan(); save(); computeSeats(); renderHome(); publishPlan(true); toast('Plan de la salle installé'); } },6500);
+  if(false) setTimeout(()=>{ if(S.fix24) return; S.fix24=true; save();
     const small=S.plan.tables.filter(t=>(+t.seats||0)<24); if(!small.length) return;
     if(confirm(`Dans le Google Sheet, une table reçoit environ 24 personnes.\nMettre les ${S.plan.tables.length} tables de ton plan à 24 places ?\n\nTa disposition ne change pas. Ton plan actuel est gardé (Réglages → Plan de salle → « Revenir au plan d'avant »).`)){
       try{ localStorage.setItem(BK7,JSON.stringify(S.plan)); }catch(e){} S.plan.tables.forEach(t=>t.seats=24); save(); computeSeats(); renderHome(); publishPlan(true); toast('Toutes les tables ont maintenant 24 places'); } },6500);
