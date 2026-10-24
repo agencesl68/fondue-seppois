@@ -504,6 +504,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 
 /* ================= Téléphone & tablette : onglets en bas, liste groupée, fiche plus nette ================= */
 .tabbar{display:none}
+body:not(.demo-link) #demoBtn,body:not(.demo-link) #demoStart{display:none!important} /* la démo se fait avec le lien ?demo */
 @media (max-width:900px), (orientation:landscape) and (max-height:520px) and (pointer:coarse){
   .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;gap:8px;padding:8px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:rgba(9,11,32,.94);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line-2)}
   .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;border:0;border-radius:14px;background:transparent;color:var(--muted);font:800 14px Manrope;transition:background .2s,color .2s}
@@ -996,6 +997,7 @@ function load(){
     o.plan=Object.assign(defaultPlan(),{bg:o.plan?.bg||null}); o.planTs=2; o.planSig=''; }
   else { if(!o.plan.rev) o.plan.rev=PLAN_REV; if((+o.planTs||0)<2) o.planTs=tablesKey(o.plan)===tablesKey(defaultPlan())?2:3; }
   o.plan2=true;
+  if(!DEMO&&o.demoBk){ o.assign=o.demoBk.assign||o.assign; o.arrived=o.demoBk.arrived||o.arrived; o.extra=o.demoBk.extra||o.extra; delete o.demoBk; } // démo restée ouverte : on remet les vraies données, sans rien envoyer
   o.mode='accueil'; o.dev=o.dev||('d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
   return o;
 }
@@ -1121,9 +1123,9 @@ function mealChips(o,sh){ return (o.fa+o.fe?`<span class="meal f">Fondue ${o.fa+
   +(o.x?`<span class="meal x">+${o.x} chaise${o.x>1?'s':''}</span>`:''); }
 /* arrivées : nombre de personnes du groupe déjà là (compatible avec l'ancien format « heure ») */
 function arrOf(g){ const v=S.arrived[g.key]; if(!v) return null; if(typeof v==='string') return {n:g.size||1,t:v,last:v}; return v; }
-function setArr(g,n,remote){ const prev=arrOf(g)?.n||0; if(!n) delete S.arrived[g.key]; else { const a=arrOf(g); S.arrived[g.key]={n,t:a?.t||now(),last:now(),by:S.accName||''}; } S.arrTs=S.arrTs||{}; S.arrTs[g.key]=Date.now();
-  const id=uid(); if(!remote) markArr(id); save(); computeSeats();
-  if(!remote&&!DEMO_LOCAL()) relaySend({t:'arr',id,key:g.key,n:n||0,prev,by:S.accName||'',at:S.arrived[g.key]?.t||null}); }
+function setArr(g,n,remote){ const prev=arrOf(g)?.n||0; if(!n) delete S.arrived[g.key]; else { const a=arrOf(g); S.arrived[g.key]={n,t:a?.t||now(),last:now(),by:S.accName||''}; } S.arrTs=S.arrTs||{}; const ts=Math.max(Date.now(),(S.arrTs[g.key]||0)+1,(+S.resetTs||0)+1); S.arrTs[g.key]=ts;
+  const id=uid(); if(!remote){ markArr(id); localDirty=true; } save(); computeSeats();
+  if(!remote&&!DEMO_LOCAL()) relaySend({t:'arr',id,key:g.key,n:n||0,prev,by:S.accName||'',at:S.arrived[g.key]?.t||null,ts}); }
 function markArr(id){ S.arrSeen=S.arrSeen||[]; S.arrSeen.push(id); if(S.arrSeen.length>3000) S.arrSeen.splice(0,S.arrSeen.length-3000); }
 const DEMO_LOCAL=()=>false;
 const tLabel=g=>g.tables.map(t=>t.label).join(' · ');
@@ -1559,6 +1561,7 @@ function renderPlace(){
 }
 $('#placeQ').oninput=renderPlace;
 function startDemo(){
+  if(!DEMO) return toast('Pour une démo, ouvre le lien de démo (…/fondue-seppois/?demo)');
   if(S.demoBk) return toast('La démo est déjà lancée');
   S.demoBk={assign:S.assign,arrived:S.arrived,extra:S.extra}; S.assign={...S.assign}; S.arrived={...S.arrived};
   const ts=[...S.plan.tables].sort((a,b)=>(parseInt(a.label)||1e9)-(parseInt(b.label)||1e9)); let k=Math.floor(ts.length*.15);
@@ -1596,9 +1599,9 @@ $('#recapTbl').addEventListener('click',e=>{ const r=e.target.closest('tr[data-t
 $('#placeTbl').addEventListener('change',e=>{
   const xk=e.target.dataset.xkey;
   if(xk){ const g=guests.find(x=>x.key===xk), v=e.target.value.trim(); if(v===''||(g&&+v===g.extraAuto)) delete S.extra[xk]; else S.extra[xk]=Math.max(0,parseInt(v,10)||0);
-    const vts=Date.now(); S.extraTs=S.extraTs||{}; S.extraTs[xk]=vts; save(); renderPlace(); if(!S.demoBk) relaySend({t:'ext',dev:S.dev,key:xk,v:S.extra[xk]!=null?S.extra[xk]:null,vts}); return; }
+    const vts=Date.now(); S.extraTs=S.extraTs||{}; S.extraTs[xk]=vts; localDirty=true; save(); renderPlace(); if(!S.demoBk) relaySend({t:'ext',dev:S.dev,key:xk,v:S.extra[xk]!=null?S.extra[xk]:null,vts}); return; }
   const k=e.target.dataset.key; if(!k) return; const v=e.target.value.trim(); if(v) S.assign[k]=v; else delete S.assign[k];
-  const vts=Date.now(); S.assignTs=S.assignTs||{}; S.assignTs[k]=vts; save(); renderPlace(); if(!S.demoBk) relaySend({t:'asg',dev:S.dev,key:k,v:v||'',vts}); });
+  const vts=Date.now(); S.assignTs=S.assignTs||{}; S.assignTs[k]=vts; localDirty=true; save(); renderPlace(); if(!S.demoBk) relaySend({t:'asg',dev:S.dev,key:k,v:v||'',vts}); });
 
 /* ================= Éditeur de plan (placement libre) ================= */
 let selIds=new Set(), drag=null, marq=null, snap=true, undo=[], xf=null, pan=null, ezv=null, clip=null, pasteN=0, lastMouse=null, overCanvas=false, spaceDown=false;
@@ -1808,7 +1811,7 @@ function download(name,text,type){ const a=document.createElement('a'); a.href=U
 $('#bkExport').onclick=()=>download('accueil-fondue-sauvegarde.json',JSON.stringify({plan:S.plan,assign:S.assign,extra:S.extra,arrived:S.arrived,ev:S.ev,src:S.src,cols:S.cols},null,2),'application/json');
 $('#bkImport').onchange=e=>{ const f=e.target.files[0]; if(!f) return; f.text().then(t=>{ try{ Object.assign(S,JSON.parse(t)); if(!isDrawnPlan(S.plan)) S.plan=Object.assign(defaultPlan(),{bg:S.plan?.bg||null}); else S.plan.rev=PLAN_REV; S.planTs=Math.max(+S.planTs||0,3); S.planSig=planSig(); save(); buildGuests(); applyEv(); renderAdmin(); toast('Sauvegarde importée'); }catch(err){ alert('Fichier invalide.'); } }); };
 $('#arrExport').onclick=()=>download('arrivees.csv','\ufeffNom;Prénom;Places assises;Enfants -6 ans (sans chaise);Dont gratuits adultes;Chaises en plus;Arrivés;Fondue;Jambon;Table;Première arrivée;Dernière mise à jour\n'+guests.map(g=>{ const a=arrOf(g); return [g.nom,g.pre,g.size,g.gratE,S.ev.gratAExtra?g.gratA:0,g.extra,a?.n||0,g.fondue,g.jambon,tLabel(g),a?.t||'',a?.last||''].join(';'); }).join('\n'),'text/csv');
-function resetSoiree(){ const ts=Date.now(); S.arrived={}; S.resetTs=ts; S.reset2=true; save(); calls.clear(); computeSeats(); renderHome(); scheduleRelayRender(); relaySend({t:'reset'}); setTimeout(()=>sendState(true),400); toast('Arrivées remises à zéro sur tous les appareils'); }
+function resetSoiree(){ const ts=Date.now(); S.arrived={}; S.resetTs=ts; pruneReset(); S.reset2=true; save(); calls.clear(); computeSeats(); renderHome(); scheduleRelayRender(); relaySend({t:'reset'}); setTimeout(()=>sendState(true),400); toast('Arrivées remises à zéro sur tous les appareils'); }
 $('#arrReset').onclick=()=>{ if(confirm('Remettre à zéro toutes les arrivées pointées, sur tous les téléphones ?')) resetSoiree(); };
 
 /* ================= Passage à 7 tables par colonne (demandé le 16/10, proposé une seule fois) ================= */
@@ -1848,7 +1851,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-24.6';
+const APP_V='2026-10-24.7';
 const appBusy=()=>{ try{ return $('#adm').classList.contains('show')||!$('#mName').hidden||!$('#mCode').hidden||!!(cur&&$('#ov').classList.contains('show')&&draftN!==(arrOf(cur)?.n||0)); }catch(e){ return false; } };
 let updWait=0;
 async function checkUpdate(){ if(!/^https?:$/.test(location.protocol)) return;
@@ -1877,7 +1880,7 @@ async function applyHash(){
     if(h.has('cfg')){ const c=await unpackCfg(h.get('cfg'));
       if(c.plan&&(!hadStored||confirm("Ce lien contient un plan de salle et des placements.\nRemplacer ceux de cet ordinateur ? (les arrivées déjà pointées sont gardées)"))){
         if(isDrawnPlan(c.plan)){ const bg=S.plan.bg; S.plan=Object.assign({w:1800,h:1100,bgOp:.5},c.plan,{rev:PLAN_REV}); if(!S.plan.bg) S.plan.bg=bg;
-          S.assign=c.assign||{}; S.extra=c.extra||{}; S.planTs=Math.max(+c.pts||3,3); S.planSig=planSig(); msg='Plan, placements et sheet installés sur cet ordinateur'; }
+          S.assignTs=S.assignTs||{}; S.extraTs=S.extraTs||{}; for(const k in (c.assign||{})) if(!S.assignTs[k]) S.assign[k]=c.assign[k]; for(const k in (c.extra||{})) if(!S.extraTs[k]) S.extra[k]=c.extra[k]; S.planTs=Math.max(+c.pts||3,3); S.planSig=planSig(); msg='Plan, placements et sheet installés sur cet ordinateur'; }
         else msg='Ancien plan du lien ignoré : le plan dessiné de la salle est gardé';
         S.reset1=true; if(c.ev) Object.assign(S.ev,c.ev); S.done7=true; }
       if(c.sheet) S.src.url=c.sheet; }
@@ -1895,6 +1898,7 @@ $('#cfgCopy').onclick=async()=>{
 /* ================= Placeurs : l'accueil envoie « qui arrive, combien, quelle table » aux téléphones des placeurs =================
    Relais : ntfy.sh (gratuit, sans compte). Chaque message est compressé puis chiffré (AES-GCM) avec une clé tirée de
    l'identifiant du sheet : le relais ne voit que des octets illisibles, seuls les appareils qui ont le code d'accès lisent. */
+let reT=0, reDelay=5e3, lastKa=0, lastMsgSec=0;
 let chan=null, es=null, relayState='off', calls=new Map(), seenMsg=new Set(), placeursSeen=new Map(), helloT=null, lastPlanSent=0, lastPlanKey='', pvOpen=null, relayRaf=0, actx=null, pvSig='';
 const placeursOn=()=>S.ev.placeurs!==false;
 const hashStr=t=>{ let h=0; for(let i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))|0; return h; };
@@ -1911,19 +1915,26 @@ async function seal(obj){ const c=await getChan(); let data=new TextEncoder().en
   out[0]=flag; out.set(iv,1); out.set(ct,13); return b64u.enc(out); }
 async function unseal(str){ const c=await getChan(), all=b64u.dec(str.trim());
   let data=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:all.slice(1,13)},c.key,all.slice(13)));
-  if(all[0]===1){ const st=new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw')); data=new Uint8Array(await new Response(st).arrayBuffer()); }
+  if(all[0]===1){ if(!window.DecompressionStream) throw {old:true}; const st=new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw')); data=new Uint8Array(await new Response(st).arrayBuffer()); }
   return JSON.parse(new TextDecoder().decode(data)); }
-async function relaySend(obj){ const c=await getChan(); if(!c) return false;
-  try{ const r=await fetch('https://ntfy.sh/'+c.topic,{method:'POST',body:await seal({...obj,ts:Date.now()})}); return r.ok; }catch(e){ return false; } }
+let oldShown=false;
+function oldPhone(){ if(oldShown) return; oldShown=true; const d=document.createElement('div'); d.className='demo'; d.style.cssText='border-color:#F87171;background:rgba(248,113,113,.14);color:#FECACA;margin:0 0 10px';
+  d.innerHTML="<b>Téléphone trop ancien</b> : il ne reçoit pas les arrivées des autres (iOS 16.4 minimum). Mets-le à jour, ou utilise un autre téléphone."; $('.col')?.prepend(d); }
+async function relayPost(body,q){ const c=await getChan(); if(!c) return false;
+  try{ const r=await fetch('https://ntfy.sh/'+c.topic+(q||''),{method:'POST',body}); return r.ok; }catch(e){ return false; } }
+async function relaySend(obj,q){ const c=await getChan(); if(!c) return false; return relayPost(await seal({ts:Date.now(),...obj}),q); }
 function setRelay(st){ if(relayState===st) return; relayState=st; scheduleRelayRender(); }
 async function connectRelay(){
   if(!placeursOn()){ if(es){ es.close(); es=null; } setRelay('off'); return; }
-  const c=await getChan(); if(!c){ setRelay('off'); return; } if(es&&es._t===c.topic){ return; } if(es) es.close();
-  es=new EventSource(`https://ntfy.sh/${c.topic}/sse?since=12h`); es._t=c.topic; setRelay('wait');
-  es.onopen=()=>setRelay('ok'); es.onerror=()=>setRelay('err');
-  es.onmessage=async ev=>{ let d; try{ d=JSON.parse(ev.data); }catch(e){ return; } if(d.event!=='message'||seenMsg.has(d.id)) return; seenMsg.add(d.id); setRelay('ok');
-    let body=d.message; if(d.attachment?.url&&(!body||body.length<20)){ try{ body=await (await fetch(d.attachment.url)).text(); }catch(e){ return; } }
-    let m; try{ m=await unseal(body); }catch(e){ return; } onRelay(m); };
+  const c=await getChan(); if(!c){ setRelay('off'); return; } if(es&&es._t===c.topic&&es.readyState!==2){ return; } if(es){ es.close(); es=null; } clearTimeout(reT);
+  const since=lastMsgSec?Math.max(0,lastMsgSec-120):'12h', src=new EventSource(`https://ntfy.sh/${c.topic}/sse?since=${since}`); es=src; src._t=c.topic; setRelay('wait'); lastKa=Date.now();
+  src.onopen=()=>{ if(es!==src) return; lastKa=Date.now(); reDelay=5e3; setRelay('ok'); };
+  src.addEventListener('keepalive',()=>{ lastKa=Date.now(); });
+  src.onerror=()=>{ if(es!==src) return; setRelay('err'); if(src.readyState===2){ src.close(); es=null; clearTimeout(reT); reT=setTimeout(connectRelay,reDelay+Math.random()*reDelay); reDelay=Math.min(reDelay*2,120e3); } };
+  src.onmessage=async ev=>{ lastKa=Date.now(); let d; try{ d=JSON.parse(ev.data); }catch(e){ return; } if(d.time) lastMsgSec=Math.max(lastMsgSec,+d.time||0);
+    if(d.event!=='message'||seenMsg.has(d.id)) return; seenMsg.add(d.id); setRelay('ok');
+    let body=d.message; if(d.attachment?.url){ const u=String(d.attachment.url); if(!/^https:\/\/ntfy\.sh\/file\/[\w.-]+$/.test(u)||(+d.attachment.size||0)>200000) return; try{ const r=await fetch(u); if(!r.ok) return; body=await r.text(); }catch(e){ return; } }
+    let m; try{ m=await unseal(body); }catch(e){ if(e&&e.old) oldPhone(); return; } onRelay(m); };
   startHello(); publishPlan(false); setTimeout(()=>sendState(true),2500); } // nouvelle connexion : on se signale, on partage le plan et l'état complet
 /* un même groupe pas encore pris en charge = une seule carte : les envois suivants s'y ajoutent */
 const callAlias=new Map();
@@ -1933,25 +1944,28 @@ function addCall(m){ if(getCall(m.id)) return null;
   if(ex){ ex.n+=m.n; ex.total=m.total||ex.total; ex.ts=m.ts; ex.tables=m.tables; ex.tids=m.tids; ex.note=m.note; callAlias.set(m.id,ex.id); return ex; }
   const c={...m,status:'wait',by:null}; calls.set(m.id,c); return c; }
 function onRelay(m){
+  if(m.t!=='hello'&&m.dev&&m.dev!==S.dev&&m.by) placeursSeen.set(m.dev,{by:m.by,ts:m.ts||Date.now()});
   if(m.t==='state'){ if(m.dev!==S.dev) lastForeignState=Date.now(); mergeState(m); return; }
   if(m.t==='asg'||m.t==='ext'){ mergeState({dev:m.dev,[m.t]:{[m.key]:[m.v,m.vts]}}); return; }
   if(m.t==='call'&&!(S.resetTs&&m.ts<=S.resetTs)){ const c=addCall(m); if(c&&S.mode==='placeur'&&Date.now()-m.ts<120000) alertNew(c); scheduleRelayRender(); return; }
   if(m.t==='arr'){ S.arrTs=S.arrTs||{}; S.arrSeen=S.arrSeen||[];
     if((S.resetTs&&m.ts<=S.resetTs)||(m.id&&S.arrSeen.includes(m.id))) return;
     const g=guests.find(x=>x.key===m.key), loc=arrOf(g||{key:m.key,size:1})?.n||0; let n;
-    if(m.id&&m.prev!=null) n=m.prev===loc?m.n:loc+(m.n-m.prev); // deux téléphones sur le même groupe : on additionne
+    const both=!!(m.id&&m.prev!=null&&m.prev!==loc); // deux téléphones sur le même groupe en même temps
+    if(m.id&&m.prev!=null) n=both?loc+(m.n-m.prev):m.n;
     else { if(!(m.ts>(S.arrTs[m.key]||0))) return; n=m.n; } // ancien format : valeur absolue
-    n=Math.max(0,Math.min(g?.size||999,n)); if(m.id) markArr(m.id); S.arrTs[m.key]=Math.max(S.arrTs[m.key]||0,m.ts);
+    n=Math.max(0,Math.min(g?.size||999,n)); if(m.id) markArr(m.id);
+    S.arrTs[m.key]=Math.max(S.arrTs[m.key]||0,m.ts)+(both?1:0); if(both){ localDirty=true; clearTimeout(mergeT); mergeT=setTimeout(()=>sendState(true),2000+Math.random()*2000); } // le total additionné gagne partout
     if(n>0){ const a=S.arrived[m.key]; const old=a&&typeof a==='object'?a:null; S.arrived[m.key]={n,t:old?.t||m.at||now(),last:now(),by:m.by||old?.by||''}; } else delete S.arrived[m.key];
     save(); computeSeats(); needHome=true; if(cur&&cur.key===m.key) draftKey=m.key; scheduleRelayRender(); return; }
   if(m.t==='reset'){ if(!S.resetTs||m.ts>S.resetTs){ S.resetTs=m.ts; save(); } for(const [id,c] of calls) if(c.ts<=m.ts) calls.delete(id);
-    S.arrTs=S.arrTs||{}; let ch=false; for(const k of Object.keys(S.arrived)) if((S.arrTs[k]||0)<=m.ts){ delete S.arrived[k]; ch=true; } if(ch){ save(); computeSeats(); needHome=true; if(cur) draftKey=cur.key; } }
+    S.arrTs=S.arrTs||{}; let ch=false; for(const k of Object.keys(S.arrived)) if((S.arrTs[k]||0)<=m.ts){ delete S.arrived[k]; ch=true; } pruneReset(); if(ch){ save(); computeSeats(); needHome=true; if(cur) draftKey=cur.key; } }
   else if(m.t==='call'&&S.resetTs&&m.ts<=S.resetTs){}
   else if(m.t==='call'){ if(!calls.has(m.id)){ calls.set(m.id,{...m,status:'wait',by:null}); if(S.mode==='placeur'&&Date.now()-m.ts<120000) alertNew(m); } }
   else if(m.t==='claim'){ const c=getCall(m.id); if(c&&c.status!=='done'){ c.status='claimed'; c.by=m.by; } }
   else if(m.t==='unclaim'){ const c=getCall(m.id); if(c&&c.status==='claimed'&&c.by===m.by){ c.status='wait'; c.by=null; } }
   else if(m.t==='done'){ const c=getCall(m.id); if(c){ c.status='done'; c.by=m.by||c.by; } }
-  else if(m.t==='hello'){ if(m.dev!==S.dev){ const seen=placeursSeen.get(m.dev||m.by); placeursSeen.set(m.dev||m.by,{by:m.by,ts:m.ts}); if(!seen||Date.now()-seen.ts>5*60e3) answerNewcomer(); } /* un téléphone arrive : un seul d'entre nous lui donne l'état complet */ if(Date.now()-lastPlanSent>5*60e3) publishPlan(true); }
+  else if(m.t==='hello'){ if(m.dev!==S.dev){ const seen=placeursSeen.get(m.dev||m.by); placeursSeen.set(m.dev||m.by,{by:m.by,ts:m.ts}); if(!seen||Date.now()-seen.ts>12*60e3) answerNewcomer(); } /* un téléphone arrive : un seul d'entre nous lui donne l'état complet */ }
   else if(m.t==='plan'){ const pts=+m.pts||1;
     if(((+m.rev||0)>=PLAN_REV||pts>3)&&isDrawnPlan(m.plan)&&pts>(S.planTs||0)){
       if($('#adm').classList.contains('show')){ if(!pendingPlan||pts>pendingPlan.pts) pendingPlan={plan:m.plan,pts}; } else adoptPlan(m.plan,pts); } }
@@ -1966,32 +1980,44 @@ function planEdited(){ const k=planSig(); if(k===S.planSig) return; S.planSig=k;
    placements et chaises ajoutés à la main. Pour chaque ligne, la modification la plus récente gagne.
    Un téléphone éteint, arrivé en retard ou resté sur une vieille version rattrape donc tout, même au-delà des 12 h du relais. */
 let stateSig='', lastStateSent=0;
-function stateSnap(){ const arr={}, asg={}, ext={}; S.arrTs=S.arrTs||{};
-  for(const k of Object.keys(S.arrTs)){ const ts=+S.arrTs[k]||0; if(!ts) continue; const a=S.arrived[k], o=a&&typeof a==='object'?a:null, g=o?null:guests.find(x=>x.key===k);
-    arr[k]=[o?o.n:(a?(g?.size||1):0), ts, o?.t||(typeof a==='string'?a:''), o?.by||''].map(v=>v===undefined?'':v); }
+function stateSnap(){ const arr={}, asg={}, ext={}; S.arrTs=S.arrTs||{}; const R=+S.resetTs||0;
+  for(const k of Object.keys(S.arrTs)){ const ts=+S.arrTs[k]||0; if(!ts||ts<=R) continue; const a=S.arrived[k], o=a&&typeof a==='object'?a:null, g=o?null:guests.find(x=>x.key===k);
+    const n=o?o.n:(a?(g?.size||1):0); arr[k]=n?[n, ts, o?.t||(typeof a==='string'?a:''), o?.by||'']:[0,ts]; }
   if(!S.demoBk){ for(const k of Object.keys(S.assignTs||{})) asg[k]=[S.assign[k]||'', +S.assignTs[k]];
     for(const k of Object.keys(S.extraTs||{})) ext[k]=[S.extra[k]!=null?+S.extra[k]:null, +S.extraTs[k]]; }
-  return {t:'state', v:1, dev:S.dev, by:S.accName||'', resetTs:+S.resetTs||0, arr, asg, ext}; }
-function sendState(force){ if(!placeursOn()||!es) return; const m=stateSnap(), sig=JSON.stringify([m.resetTs,m.arr,m.asg,m.ext]);
+  return {t:'state', v:2, dev:S.dev, by:S.accName||'', resetTs:R, arr, asg, ext}; }
+async function sendParts(m){ const body=await seal({ts:Date.now(),...m}); if(body.length<=3500) return relayPost(body);
+  const ent=[...Object.entries(m.arr).map(e=>['arr',...e]),...Object.entries(m.asg).map(e=>['asg',...e]),...Object.entries(m.ext).map(e=>['ext',...e])];
+  if(ent.length<2) return relayPost(body); const half=Math.ceil(ent.length/2);
+  for(const part of [ent.slice(0,half),ent.slice(half)]){ const q={...m,arr:{},asg:{},ext:{}}; part.forEach(([kind,k,v])=>q[kind][k]=v); await sendParts(q); } return true; }
+let localDirty=false, mergeT=0;
+async function sendState(force){ if(!placeursOn()||!es||S.demoBk) return; const m=stateSnap(), sig=JSON.stringify([m.resetTs,m.arr,m.asg,m.ext]);
   if(!m.resetTs&&!Object.keys(m.arr).length&&!Object.keys(m.asg).length&&!Object.keys(m.ext).length) return;
-  if(!force&&sig===stateSig&&Date.now()-lastStateSent<10*60e3) return; stateSig=sig; lastStateSent=Date.now(); relaySend(m); }
-setInterval(()=>sendState(false),3*60e3);
+  if(!force&&sig===stateSig) return; stateSig=sig; lastStateSent=Date.now(); return sendParts(m); }
+setInterval(()=>{ if(localDirty){ localDirty=false; sendState(false); } },60e3);   // mes propres changements : partagés dans la minute
+setInterval(()=>sendState(true),20*60e3);
+setInterval(()=>{ if(es&&(es.readyState===2||Date.now()-lastKa>4*60e3)){ try{ es.close(); }catch(e){} es=null; connectRelay(); } },30e3); // relais muet : on se reconnecte
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&(!es||es.readyState===2)) connectRelay(); });                                        // et l'état complet toutes les 20 min (relais limité en messages)
+function pruneReset(){ const R=+S.resetTs||0; for(const k of Object.keys(S.arrTs||{})) if(S.arrTs[k]<=R) delete S.arrTs[k]; }
+
 /* réponse à un nouveau téléphone : attente au hasard, et on se tait si un autre a déjà envoyé l'état (limite de messages du relais, même Wi-Fi) */
 let answerT=0, lastForeignState=0;
-function answerNewcomer(){ if(answerT) return; const asked=Date.now(); answerT=setTimeout(()=>{ answerT=0; if(lastForeignState>asked) return; sendState(true); },1500+Math.random()*6000); }
+function answerNewcomer(){ if(answerT) return; const asked=Date.now(); answerT=setTimeout(()=>{ answerT=0; if(lastForeignState>asked) return; sendState(true); publishPlan(true); },1500+Math.random()*6000); }
 function mergeState(m){ if(!m||m.dev===S.dev) return; let ch=false, place=false; S.arrTs=S.arrTs||{}; S.assignTs=S.assignTs||{}; S.extraTs=S.extraTs||{};
   const rts=+m.resetTs||0;
-  if(rts>(+S.resetTs||0)){ S.resetTs=rts; for(const k of Object.keys(S.arrived)) if((S.arrTs[k]||0)<=rts){ delete S.arrived[k]; } for(const [id,c] of calls) if(c.ts<=rts) calls.delete(id); ch=true; }
-  for(const [k,e] of Object.entries(m.arr||{})){ if(!Array.isArray(e)) continue; const ts=+e[1]||0; if(!(ts>(S.arrTs[k]||0))||ts<=(+S.resetTs||0)) continue;
-    const g=guests.find(x=>x.key===k), n=Math.max(0,Math.min(g?.size||999,+e[0]||0)); S.arrTs[k]=ts;
+  if(rts>(+S.resetTs||0)){ S.resetTs=rts; for(const k of Object.keys(S.arrived)) if((S.arrTs[k]||0)<=rts){ delete S.arrived[k]; } for(const [id,c] of calls) if(c.ts<=rts) calls.delete(id); pruneReset(); ch=true; }
+  for(const [k,e] of Object.entries(m.arr||{})){ if(!Array.isArray(e)) continue; const ts=+e[1]||0, loc=+S.arrTs[k]||0; if(ts<loc||ts<=(+S.resetTs||0)) continue;
+    const g=guests.find(x=>x.key===k), n=Math.max(0,Math.min(g?.size||999,+e[0]||0));
+    if(ts===loc){ const a=S.arrived[k], curN=a?(typeof a==='object'?+a.n:999):0; if(!(n>curN)) continue; }
+    S.arrTs[k]=ts;
     if(n>0){ const old=S.arrived[k], o=old&&typeof old==='object'?old:null; S.arrived[k]={n,t:e[2]||o?.t||now(),last:now(),by:e[3]||o?.by||''}; } else delete S.arrived[k];
     ch=true; if(cur&&cur.key===k) draftKey=k; }
-  for(const [k,e] of Object.entries(m.asg||{})){ if(!Array.isArray(e)) continue; const ts=+e[1]||0; if(!(ts>(S.assignTs[k]||0))) continue; S.assignTs[k]=ts; if(e[0]) S.assign[k]=String(e[0]); else delete S.assign[k]; place=true; }
-  for(const [k,e] of Object.entries(m.ext||{})){ if(!Array.isArray(e)) continue; const ts=+e[1]||0; if(!(ts>(S.extraTs[k]||0))) continue; S.extraTs[k]=ts; if(e[0]==null||e[0]==='') delete S.extra[k]; else S.extra[k]=Math.max(0,+e[0]||0); place=true; }
+  for(const [k,e] of Object.entries(m.asg||{})){ if(!Array.isArray(e)) continue; const ts=+e[1]||0, cu=+S.assignTs[k]||0; if(ts<cu||(ts===cu&&!(String(e[0]||'')>String(S.assign[k]||'')))) continue; S.assignTs[k]=ts; if(e[0]) S.assign[k]=String(e[0]); else delete S.assign[k]; place=true; }
+  for(const [k,e] of Object.entries(m.ext||{})){ if(!Array.isArray(e)) continue; const ts=+e[1]||0, cu=+S.extraTs[k]||0; if(ts<cu||(ts===cu&&!(String(e[0]??'')>String(S.extra[k]??'')))) continue; S.extraTs[k]=ts; if(e[0]==null||e[0]==='') delete S.extra[k]; else S.extra[k]=Math.max(0,+e[0]||0); place=true; }
   if(ch||place){ save(); computeSeats(); needHome=true; if(place){ planChanged=true; if($('#adm').classList.contains('show')) renderAdmin(); } scheduleRelayRender(); } }
 async function publishPlan(force){ if(!placeursOn()||!((+S.planTs||0)>1)||!isDrawnPlan(S.plan)) return; const p={...S.plan,bg:null}, key=planSig();
   if(!force&&key===lastPlanKey&&Date.now()-lastPlanSent<30*60e3) return; lastPlanKey=key; lastPlanSent=Date.now(); return relaySend({t:'plan',plan:{...p,rev:PLAN_REV},pts:S.planTs,rev:PLAN_REV}); }
-function startHello(){ const hi=()=>relaySend({t:'hello',by:S.accName||'?',dev:S.dev}); hi(); clearInterval(helloT); helloT=setInterval(()=>{ if(!document.hidden) hi(); },90e3); }
+function startHello(){ const hi=()=>relaySend({t:'hello',by:S.accName||'?',dev:S.dev},'?cache=no'); hi(); clearInterval(helloT); helloT=setInterval(()=>{ if(!document.hidden) hi(); },300e3); }
 function callPlaceur(g,count,manual){
   if(!placeursOn()) return manual&&toast('Placeurs désactivés (Réglages → Soirée)');
   if(!S.src.url&&!DEMO) return manual&&toast("Placeurs : branche d'abord le Google Sheet");
@@ -2045,7 +2071,7 @@ function scheduleRelayRender(){ if(relayRaf) return; relayRaf=setTimeout(()=>{ r
   if(planChanged){ planChanged=false; refreshCard(true); if(!$('#mTable').hidden&&curTableId) openTable(curTableId); }
   if(needHome){ needHome=false; if(S.mode!=='placeur'){ if($('#ov').classList.contains('show')&&cur){ if(draftKey===cur.key){ draftN=arrOf(cur)?.n||0; } draftKey=null; updArrive(); updKpis(); } else renderHome(); } }
   renderQueue(); renderRelayInfo(); renderAccName(); }); }
-function onlinePlaceurs(){ return [...new Set([...placeursSeen.values()].filter(v=>v&&v.by&&v.by!=='?'&&Date.now()-v.ts<4*60e3).map(v=>v.by))]; }
+function onlinePlaceurs(){ return [...new Set([...placeursSeen.values()].filter(v=>v&&v.by&&v.by!=='?'&&Date.now()-v.ts<11*60e3).map(v=>v.by))]; }
 function renderQueue(){ const q=$('#queue'), all=[...calls.values()].sort((a,b)=>b.ts-a.ts).slice(0,8), on=onlinePlaceurs();
   q.hidden=true;
   q.innerHTML=`<h4><span>Placeurs${S.accName?` · accueil : ${esc(S.accName)}`:''}</span><span class="pvst ${relayState==='ok'?'ok':relayState==='err'?'err':''}">${on.length?`${on.length} en ligne : ${esc(on.join(', '))}`:relayState==='ok'?'aucun placeur en ligne':'relais hors ligne'}</span></h4>`
