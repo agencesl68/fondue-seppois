@@ -1411,7 +1411,7 @@ function regionFor(ids,withEntry,pad,minW,pts){
   let w=Math.max(x1-x0,minW||0), h=y1-y0, cx=(x0+x1)/2, cy=(y0+y1)/2;
   if(w/h<ar) w=h*ar; else h=w/ar;
   if(w>=v.w&&h>=v.h){ w=Math.max(v.w,v.h*ar); h=w/ar; cx=v.w/2; cy=v.h/2; } // ne jamais dézoomer au-delà de la salle entière
-  else { cx=w>=v.w?v.w/2:Math.min(Math.max(cx,w/2),v.w-w/2); cy=h>=v.h?v.h/2:Math.min(Math.max(cy,h/2),v.h-h/2); } // garder le cadre dans la salle
+  // pas de blocage aux bords de la salle : la table (et le chemin) restent bien au centre, même tout au bord du plan
   return {x:cx-w/2,y:cy-h/2,w,h};
 }
 function camTransform(r){
@@ -2106,7 +2106,7 @@ function drawPcPlan(box,c){ const p=S.mode==='placeur'?S.pvPlan:S.plan; if(!p||!
   try{ let ts=c.tids.map(id=>p.tables.find(t=>t.id===id)).filter(Boolean); if(!ts.length) ts=c.tables.map(l=>p.tables.find(t=>norm(t.label)===norm(l))).filter(Boolean); if(!ts.length){ box.remove(); return; }
     routeInfo=null; const route=routeTo(ts[0]), rd=routeInfo?.dur||1.4; box.style.setProperty('--rd',rd+'s'); box.style.setProperty('--arr',(.7+rd).toFixed(2)+'s');
     renderPlan(svg,{hit:new Set(ts.map(t=>t.id)),you:true,dim:true,route});
-    const pts=[...(routeInfo?.pts||[]),...ts.map(t=>({x:t.x,y:t.y}))]; let x0=Math.min(...pts.map(q=>q.x))-130, x1=Math.max(...pts.map(q=>q.x))+130, y0=Math.min(...pts.map(q=>q.y))-130, y1=Math.max(...pts.map(q=>q.y))+70;
+    const pts=[...(routeInfo?.pts||[]),...ts.map(t=>({x:t.x,y:t.y}))]; let x0=Math.min(...pts.map(q=>q.x))-130, x1=Math.max(...pts.map(q=>q.x))+130, y0=Math.min(...pts.map(q=>q.y))-130, y1=Math.max(...pts.map(q=>q.y))+130;
     let w=x1-x0, h=y1-y0; const ar=16/11; if(w/h<ar){ const nw=h*ar; x0-=(nw-w)/2; w=nw; } else { const nh=w/ar; y0-=(nh-h)/2; h=nh; }
     svg.setAttribute('viewBox',`${x0} ${y0} ${w} ${h}`);
     setTimeout(()=>{ const g=svg.querySelector('.traveler-g'), mo=svg.querySelector('#travel'); if(g&&mo&&svg.isConnected){ g.style.opacity=1; try{ mo.beginElement(); }catch(e){} } },700);
