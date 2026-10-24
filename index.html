@@ -443,7 +443,7 @@ table.data th{color:var(--muted);font-weight:800;font-size:11px;text-transform:u
 input[type=range]{width:100%;accent-color:var(--gold)}
 
 @media (max-width:700px){
-  html,body{height:auto;min-height:100%;overflow-x:hidden}
+  html,body{height:auto;min-height:100%} html{overflow-x:clip}
   header{padding:calc(40px + env(safe-area-inset-top,0px)) 14px 8px!important}
   .home{padding:6px 12px calc(24px + env(safe-area-inset-bottom,0px));gap:14px}
   .search input{font-size:20px;padding:15px 48px 15px 52px;border-radius:18px}.search .mag{left:16px;width:24px;height:24px}
@@ -464,7 +464,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 @media (min-width:901px) and (max-width:1100px){ .kpis .kpi:nth-child(2){display:none} }
 /* ================= Téléphone & tablette (portrait) ================= */
 @media (min-width:701px) and (max-width:900px){ .ttl{gap:8px} .ttl .f1{font-size:34px} .ttl .f2{font-size:30px} .ttl .sw{width:22px;height:22px} .crest{width:64px;height:64px} .org{font-size:12px} }
-@media (max-width:900px){
+@media (max-width:900px), (orientation:landscape) and (max-height:520px) and (pointer:coarse){
   header{gap:12px} .titles{flex:1;min-width:0;overflow:hidden} .kicker{white-space:nowrap} .mebtn,.kpis,.ibtn{flex:none}
   .search{position:sticky;top:0;z-index:8;margin:0 -12px;padding:8px 12px;background:rgba(13,14,46,.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
   .letters{display:flex;overflow-x:auto;gap:6px;scrollbar-width:none;margin:2px -12px 10px;padding:0 12px}
@@ -490,8 +490,8 @@ input[type=range]{width:100%;accent-color:var(--gold)}
   .arrbox #rSend{display:none}.arrbox.drafting #rSend{display:inline-flex;visibility:visible}.arrbox.drafting #rAll{display:none}
   .stp{width:52px;height:52px}
 }
-@media (max-width:900px){
-  html,body{overflow:auto}.app{height:auto}
+@media (max-width:900px), (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  html,body{height:auto;min-height:100%} html{overflow-x:clip;overflow-y:auto} body{overflow:visible} .app{height:auto}
   .home{grid-template-columns:minmax(0,1fr)}.plancard{height:60vh}.kpis .kpi:nth-child(n+2){display:none}.datepill{display:none}
   .ov{grid-template-columns:minmax(0,1fr);overflow:auto}.bigplan{min-height:50vh}.planedit{grid-template-columns:1fr}
 }
@@ -502,7 +502,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
 
 /* ================= Téléphone & tablette : onglets en bas, liste groupée, fiche plus nette ================= */
 .tabbar{display:none}
-@media (max-width:900px){
+@media (max-width:900px), (orientation:landscape) and (max-height:520px) and (pointer:coarse){
   .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;gap:8px;padding:8px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:rgba(9,11,32,.94);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line-2)}
   .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;border:0;border-radius:14px;background:transparent;color:var(--muted);font:800 14px Manrope;transition:background .2s,color .2s}
   .tabbar button span{display:flex;align-items:center;gap:7px}
@@ -539,6 +539,84 @@ input[type=range]{width:100%;accent-color:var(--gold)}
   .ov .tbox .num{font-size:96px}.ov .tbox.multi .num{font-size:72px;white-space:nowrap}
   .note{font-size:20px;padding:8px 14px}
 }
+
+/* ================= Tablette paysage, téléphone paysage, réglages au doigt ================= */
+/* fiche d'un groupe sur grand écran : tout tient dans l'écran, la colonne de gauche défile si besoin */
+@media (min-width:901px){
+  .ov{grid-template-rows:minmax(0,1fr)}
+  .ov .info{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  .ov .bigplan{min-height:0}
+}
+@media (min-width:901px) and (max-width:1280px){
+  .ov{gap:20px;padding:20px 20px 16px}
+  .ov .info{justify-content:flex-start;padding-right:4px}
+  .ov .rcrest{width:56px;height:56px}.ov .welcome{font-size:34px}.ov .who{font-size:42px}
+  .ov .tbox{margin:10px 0 8px;padding:14px 64px 12px 26px}.ov .tbox .num{font-size:104px}.ov .tbox.multi .num{font-size:80px}
+  .ov .arrbox .stepper{order:1}.ov .arrbox .arrinfo{order:0;flex-basis:100%}
+  .ov .arrbox #rAll,.ov .arrbox #rSend{order:2;flex:1 1 0;min-width:0;white-space:normal;line-height:1.15}
+  .ov .arrbox #rSend{display:none}.ov .arrbox.drafting #rSend{display:inline-flex;visibility:visible}.ov .arrbox.drafting #rAll{display:none}
+}
+/* téléphone couché : barres compactes, fiche à gauche et plan à droite */
+@media (max-width:900px) and (orientation:landscape) and (max-height:520px), (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  header{padding-top:calc(30px + env(safe-area-inset-top,0px))!important}
+  .demo{display:none}
+  .search input{font-size:18px;padding:10px 44px 10px 48px;border-radius:14px}.search .mag{left:14px;width:22px;height:22px}
+  .letters{margin-bottom:6px}.letters button{height:36px;flex-basis:38px}
+  .tabbar{padding-top:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom,0px))}
+  .tabbar button{min-height:40px;flex-direction:row;gap:10px}.tabbar button small{font-size:12px}
+  .home{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px))!important}
+  .legend,#editPlanBtn{display:none} .planhead{padding:6px 12px 0;flex-wrap:nowrap} .planhead h2{font-size:16px}
+  body[data-view="plan"] .app>header{display:none}
+  body[data-view="plan"] .home{padding-top:calc(8px + env(safe-area-inset-top,0px))}
+  body[data-view="plan"] .home .plancard{height:calc(100dvh - 76px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;min-height:0}
+  .canvas svg{max-height:calc(100dvh - 24px)}
+  .ov{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);grid-template-rows:minmax(0,1fr);gap:12px;overflow:hidden;
+      padding:calc(8px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+  .ov .info{display:flex;flex-direction:column;gap:6px;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  .ov .obk{position:static;align-self:flex-start}
+  .ov .welcome{font-size:20px}.ov .who{font-size:26px}.ov .ppl{font-size:14px}
+  .ov .tbox{margin:2px 0;padding:8px 14px 6px}.ov .tbox .num{font-size:60px}.ov .tbox.multi .num{font-size:46px}
+  .ov .note{font-size:17px;padding:6px 12px}
+  .ov .bigplan{order:0;height:100%!important;min-height:0}
+  .ov .acts{position:sticky;bottom:0;margin:0;padding:6px 0 4px;border-top:1px solid var(--line-2)}
+  .ov .arrbox .arrinfo{display:none}
+}
+/* réglages et fenêtres au doigt */
+.adm>*{flex-shrink:0}
+.chk input{width:22px;height:22px;flex:none;accent-color:var(--gold)}
+@media (max-width:900px), (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  .adm .fi,.adm input:not([type=checkbox]):not([type=range]):not([type=file]),.adm select,.adm textarea{font-size:16px}
+  .tabs button{min-height:44px}
+  .chk{font-size:15px;padding:4px 0}
+}
+@media (max-width:700px){
+  .legend{font-size:11.5px}.chip small{font-size:11px}#rOf{font-size:12px}
+}
+
+/* ================= Correctifs tactiles (revue téléphone / tablette) ================= */
+/* A) le message de confirmation ne bloque plus les touches, même effacé */
+.toast{pointer-events:none;visibility:hidden;width:max-content;max-width:min(calc(100vw - 32px),520px);transition:opacity .4s var(--ease),transform .4s var(--ease),visibility 0s linear .4s}
+.toast.show{visibility:visible;transition-delay:0s}
+.matchinfo{pointer-events:none}
+/* G) fenêtres : défilent si l'écran est trop bas (téléphone couché) */
+.modal{place-items:start center;overflow-y:auto;overscroll-behavior:contain;padding-top:max(20px,env(safe-area-inset-top,0px));padding-bottom:max(20px,env(safe-area-inset-bottom,0px))}
+.modal>.mbox{margin:auto 0}
+@media (max-height:520px){ .mbox{padding:16px 20px} .mbox h3{font-size:24px;margin-bottom:4px} .mbox p{font-size:15px;line-height:1.35;margin-bottom:10px}
+  .namechips{grid-template-columns:repeat(4,minmax(0,1fr))} .namechips button{min-height:46px;font-size:18px} }
+/* H) récap : les pavés de chiffres passent à la ligne au lieu de pousser l'écran */
+#recapTot .kpi{flex:1 1 220px;min-width:0;max-width:100%}
+#recapTot .kpi span{display:block;white-space:normal;overflow-wrap:anywhere;line-height:1.3}
+@media (max-width:900px), (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  .search{top:env(safe-area-inset-top,0px)}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .ov.show~.toast{top:calc(12px + env(safe-area-inset-top,0px));bottom:auto;transform:translate(-50%,-30px)}
+  .ov.show~.toast.show{transform:translate(-50%,0)}
+  /* K) onglet Plan : plan assez grand pour lire les numéros, on le fait glisser au doigt */
+  body[data-view="plan"] .planbody{overflow:auto;display:block;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  body[data-view="plan"] .planbody svg{width:max(100%,820px);height:auto;max-width:none}
+  .adm .card{min-width:0;overflow-wrap:anywhere}
+}
+@media (min-width:701px) and (min-height:521px){ body[data-view="plan"] .planbody svg{width:100%} } /* tablette : le plan tient en largeur */
 </style>
 </head>
 <body>
@@ -581,7 +659,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <div id="demo" class="demo" hidden role="button" tabindex="0" style="cursor:pointer"></div>
       <div id="demoBar" class="demo" hidden style="border-color:rgba(96,165,250,.5);background:rgba(96,165,250,.12)">Mode démo — placements et arrivées inventés pour voir l'itinéraire et les couleurs. <button class="btn ghost sm" id="demoStop" style="margin-left:8px">Arrêter la démo</button></div>
       <div class="search" id="searchBox">
-        <input id="q" type="search" placeholder="Nom ou prénom…" autocomplete="off" spellcheck="false" aria-label="Rechercher un nom">
+        <input id="q" type="search" enterkeyhint="search" placeholder="Nom ou prénom…" autocomplete="off" spellcheck="false" aria-label="Rechercher un nom">
         <svg class="mag" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <button class="clear" id="qClear" aria-label="Effacer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
@@ -675,7 +753,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
           <button class="btn ghost sm" id="tSpread">Répartir</button>
           <span class="sep"></span>
           <button class="btn ghost sm" id="tUndo" title="Ctrl+Z">Annuler</button>
-          <button class="btn ghost sm on" id="tSnap">Grille aimantée</button>
+          <button class="btn gold sm" id="tLock" hidden>Déverrouiller pour modifier</button><button class="btn ghost sm on" id="tSnap">Grille aimantée</button>
           <span class="sep"></span>
           <button class="btn ghost sm" id="zOut" title="Ctrl + molette">−</button><button class="btn ghost sm" id="zFit">Ajuster</button><button class="btn ghost sm" id="zIn" title="Ctrl + molette">+</button>
         </div>
@@ -743,14 +821,14 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <p id="placeWarn" class="status err" style="margin-top:8px" hidden></p>
     </div>
     <div class="card">
-      <div class="row"><div><input class="fi" id="placeQ" placeholder="Filtrer…"></div><div style="flex:0;white-space:nowrap" class="status" id="placeStat"></div><div style="flex:0"><button class="btn gold sm" id="demoStart" style="white-space:nowrap">Lancer une démo</button></div><div style="flex:0"><button class="btn ghost sm" id="placeReset" style="color:#F87171;white-space:nowrap">Remettre les placements à zéro</button></div></div>
+      <div class="row"><div><input class="fi" id="placeQ" placeholder="Filtrer…"></div><div style="flex:none;white-space:nowrap" class="status" id="placeStat"></div><div style="flex:none"><button class="btn gold sm" id="demoStart" style="white-space:nowrap">Lancer une démo</button></div><div style="flex:none"><button class="btn ghost sm" id="placeReset" style="color:#F87171;white-space:nowrap">Remettre les placements à zéro</button></div></div>
       <div style="max-height:60vh;overflow:auto;margin-top:10px"><table class="data" id="placeTbl"></table></div>
     </div>
   </div>
 
   <div class="panel narrow" id="pRecap">
     <div class="card">
-      <div class="row"><div><h3>Récap par table — fondues et jambons</h3><p>Calculé depuis le sheet (colonnes Adultes, -12 ans, Jambons) et le placement. Les enfants de moins de 6 ans gratuits sont indiqués pour info : pas de chaise, pas de fondue ni de jambon. Les gratuits adultes font partie des adultes (comme dans le sheet) — réglable dans Soirée. Les chaises en plus demandées dans les remarques (« chaise supp »…) comptent dans les places ; les poussettes non. Corrigeables dans Placement. Pour un groupe réparti sur plusieurs tables, jambons et enfants sont répartis au prorata. Clique sur une ligne (ou sur une table du plan) pour le détail complet.</p></div><div style="flex:0"><button class="btn gold sm" id="recapPrint">Imprimer pour la cuisine</button></div></div>
+      <div class="row"><div><h3>Récap par table — fondues et jambons</h3><p>Calculé depuis le sheet (colonnes Adultes, -12 ans, Jambons) et le placement. Les enfants de moins de 6 ans gratuits sont indiqués pour info : pas de chaise, pas de fondue ni de jambon. Les gratuits adultes font partie des adultes (comme dans le sheet) — réglable dans Soirée. Les chaises en plus demandées dans les remarques (« chaise supp »…) comptent dans les places ; les poussettes non. Corrigeables dans Placement. Pour un groupe réparti sur plusieurs tables, jambons et enfants sont répartis au prorata. Clique sur une ligne (ou sur une table du plan) pour le détail complet.</p></div><div style="flex:none"><button class="btn gold sm" id="recapPrint">Imprimer pour la cuisine</button></div></div>
       <div class="kpirow" id="recapTot"></div>
       <div style="overflow:auto"><table class="data" id="recapTbl"></table></div>
     </div>
@@ -765,7 +843,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <div class="row" style="margin-top:10px">
         <div><label class="f" for="srcRefresh">Relire automatiquement</label>
           <select class="fi" id="srcRefresh"><option value="0">Jamais</option><option value="30">Toutes les 30 s</option><option value="60">Toutes les minutes</option><option value="300">Toutes les 5 minutes</option></select></div>
-        <div style="flex:0"><button class="btn gold sm" id="srcLoad">Relire maintenant</button></div>
+        <div style="flex:none"><button class="btn gold sm" id="srcLoad">Relire maintenant</button></div>
       </div>
       <div class="status" id="srcStatus"></div>
     </div>
@@ -1281,7 +1359,7 @@ function refreshCard(force){ if(!cur||!$('#ov').classList.contains('show')) retu
   updArrive(); }
 let cur=null, tmr=null;
 function openGuest(g){
-  if(!g) return; cur=g;
+  if(!g) return; cur=g; if(TOUCH&&document.activeElement&&document.activeElement!==document.body) document.activeElement.blur();
   $('#rWho').textContent=g.display;
   $('#rPpl').innerHTML=(g.size?`${g.size} personne${g.size>1?'s':''}`:'')+(hasMeals||g.extra?(hasMeals?`${mealChips({...gMeals(g),x:0})}${g.extra?`<span class="meal x">+${g.extra} place${g.extra>1?'s':''} : ${g.extraManual?'ajouté à la main':esc(g.extraWhy.join(', '))}</span>`:''}`:(g.extra?`<span class="meal x">+${g.extra} place${g.extra>1?'s':''}</span>`:'')):'');
   const box=$('#rBox'), tl=tLabel(g);
@@ -1299,7 +1377,7 @@ function openGuest(g){
   routeInfo=null; const route=ids.length?routeTo(byId[ids[0]]):'', rd=routeInfo?.dur||1.4, bp=$('.bigplan');
   bp.style.setProperty('--rd',rd+'s'); bp.style.setProperty('--arr',(.7+rd).toFixed(2)+'s');
   renderPlan(svg,{hit:new Set(ids),guest:g.key,you:true,dim:ids.length>0,meals:true,route});
-  const ov=$('#ov'); ov.classList.remove('show'); void ov.offsetWidth; ov.classList.add('show');
+  const ov=$('#ov'); ov.scrollTop=0; const inf=ov.querySelector('.info'); if(inf) inf.scrollTop=0; ov.classList.remove('show'); void ov.offsetWidth; ov.classList.add('show');
   if(ids.length){ choreo(ids); if(S.ev.fx) at(600,()=>{ const r=$('#rNum').getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,50); }); }
   armTimer();
 }
@@ -1371,7 +1449,7 @@ const bumpArr=d=>setDraft(draftN+d);
 $('#rSend').onclick=()=>setArrUI(draftN);
 $('#rCall').onclick=()=>{ callPlaceur(cur,arrOf(cur)?.n||cur.size||1,true); };
 let numBuf='', numT=0;
-function closeGuest(){ $('#ov').classList.remove('show'); clearInterval(tmr); camReset(); $('#q').value=''; letter=''; sel=-1; renderHome(); $('#q').focus(); }
+function closeGuest(){ $('#ov').classList.remove('show'); clearInterval(tmr); camReset(); $('#q').value=''; letter=''; sel=-1; renderHome(); if(!TOUCH) $('#q').focus(); }
 const TOUCH=matchMedia('(pointer:coarse)').matches; document.documentElement.classList.toggle('touch',TOUCH);
 function armTimer(){ clearInterval(tmr); const T=TOUCH?0:+S.ev.timeout, bar=$('#timer'); if(!T){ bar.style.width='0'; return; }
   const t0=Date.now(); tmr=setInterval(()=>{ const p=1-(Date.now()-t0)/(T*1000); bar.style.width=Math.max(0,p*100)+'%'; if(p<=0){ if(cur&&draftN!==(arrOf(cur)?.n||0)) return armTimer(); closeGuest(); } },100); }
@@ -1424,7 +1502,7 @@ document.addEventListener('keydown',e=>{
   if(!$('#m7').hidden){ if(e.key==='Escape') $('#m7no').click(); return; }
   const ovOn=$('#ov').classList.contains('show'), admOn=$('#adm').classList.contains('show');
   if(admOn){ if($('#pPlan').classList.contains('on')) editorKey(e); else if(e.key==='Escape') closeAdmin(); return; }
-  if(e.key==='Escape'){ if(ovOn) closeGuest(); else { $('#q').value=''; letter=''; renderHome(); $('#q').focus(); } return; }
+  if(e.key==='Escape'){ if(ovOn) closeGuest(); else { $('#q').value=''; letter=''; renderHome(); if(!TOUCH) $('#q').focus(); } return; }
   if(ovOn){
     if(e.key==='Enter'&&document.activeElement.tagName!=='BUTTON'){ e.preventDefault(); if(draftN!==(arrOf(cur)?.n||0)) $('#rSend').click(); else $('#rAll').click(); }
     else if(e.key==='+'||e.key==='='||e.key==='ArrowUp'||e.key==='ArrowRight'){ e.preventDefault(); bumpArr(1); }
@@ -1530,7 +1608,7 @@ function selBox(list){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; list.forEach(o=>{ cons
 const HANDLES={nw:[0,0],n:[.5,0],ne:[1,0],e:[1,.5],se:[1,1],s:[.5,1],sw:[0,1],w:[0,.5]};
 function handlesSVG(){
   const list=selected(); if(!list.length) return '';
-  const b=selBox(list), px=curVB().w/Math.max(1,ep.getBoundingClientRect().width), hs=11*px, rl=30*px, cx=(b.x0+b.x1)/2;
+  const r=ep.getBoundingClientRect(), v=curVB(), b=selBox(list), px=Math.max(v.w/Math.max(1,r.width),v.h/Math.max(1,r.height)), hs=(TOUCH?24:11)*px, rl=(TOUCH?40:30)*px, cx=(b.x0+b.x1)/2;
   let h=`<g class="handles"><rect class="hbox" x="${b.x0}" y="${b.y0}" width="${b.x1-b.x0}" height="${b.y1-b.y0}"/><line class="hrotl" x1="${cx}" y1="${b.y0}" x2="${cx}" y2="${b.y0-rl}"/><circle class="hrot" data-h="rot" cx="${cx}" cy="${b.y0-rl}" r="${hs*.75}"/>`;
   for(const [k,[fx,fy]] of Object.entries(HANDLES)) h+=`<rect class="hdl" data-h="${k}" x="${b.x0+(b.x1-b.x0)*fx-hs/2}" y="${b.y0+(b.y1-b.y0)*fy-hs/2}" width="${hs}" height="${hs}" rx="${hs*.25}"/>`;
   return h+'</g>';
@@ -1555,7 +1633,7 @@ function applyXf(p,e){
     st.o.w=Math.max(10,Math.round(st.w*kw)); st.o.h=Math.max(10,Math.round(st.h*kh)); });
   xf.info=sx===sy?`Taille ${Math.round(sx*100)} %`:`Taille ${Math.round(sx*100)} % × ${Math.round(sy*100)} %`;
 }
-function renderEditor(){
+function renderEditor(){ try{ ep.style.touchAction=editLock?'pan-x pan-y':'none'; const lb=$('#tLock'); lb.hidden=!TOUCH; lb.textContent=editLock?'Déverrouiller pour modifier':'Verrouiller le plan'; lb.classList.toggle('gold',editLock); lb.classList.toggle('ghost',!editLock); }catch(e){}
   computeSeats();
   renderPlan($('#ePlan'),{edit:true,sel:selIds,vb:ezv,overlay:handlesSVG(),marquee:marq?`<rect class="marquee" x="${Math.min(marq.x0,marq.x1)}" y="${Math.min(marq.y0,marq.y1)}" width="${Math.abs(marq.x1-marq.x0)}" height="${Math.abs(marq.y1-marq.y0)}"/>`:''});
   const s=selected(), one=s.length===1?s[0]:null;
@@ -1569,7 +1647,11 @@ function renderEditor(){
 }
 function svgPt(svg,e){ const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
 const ep=$('#ePlan');
+let editLock=TOUCH; // au doigt, le plan est protégé : on le déverrouille exprès pour le modifier
+$('#tLock').onclick=()=>{ editLock=!editLock; renderEditor(); toast(editLock?'Plan verrouillé':'Plan déverrouillé : glisse les tables avec le doigt'); };
+ep.addEventListener('pointercancel',()=>{ if(drag?.moved){ drag.start.forEach(s=>{ s.o.x=s.x; s.o.y=s.y; }); undo.pop(); } if(xf){ undo.pop(); xf=null; } drag=marq=pan=null; ep.classList.remove('dragging','panning'); renderEditor(); });
 ep.addEventListener('pointerdown',e=>{
+  if(editLock&&e.pointerType!=='mouse'){ const g=e.target.closest('[data-id]'); if(g){ selIds=new Set([g.dataset.id]); renderEditor(); } return; }
   hideCtx(); const p=svgPt(ep,e);
   if(e.button===1||spaceDown){ e.preventDefault(); pan={x:e.clientX,y:e.clientY,v:{...curVB()}}; ep.setPointerCapture(e.pointerId); ep.classList.add('panning'); return; }
   const hd=e.target.dataset?.h; if(hd&&e.button===0){ startXf(hd,p); ep.setPointerCapture(e.pointerId); return; }
@@ -1761,7 +1843,7 @@ $('#codeNo').onclick=()=>{ $('#mCode').hidden=true; };
 $('#codeSrc').onclick=()=>{ $('#mCode').hidden=true; openAdmin('pSource'); $('#srcUrl').focus(); };
 
 /* ================= Mise à jour automatique : GitHub fait garder l'ancienne page jusqu'à 10 min, on vérifie la version en ligne ================= */
-const APP_V='2026-10-24.2';
+const APP_V='2026-10-24.4';
 const appBusy=()=>{ try{ return $('#adm').classList.contains('show')||!$('#mName').hidden||!$('#mCode').hidden||!!(cur&&$('#ov').classList.contains('show')&&draftN!==(arrOf(cur)?.n||0)); }catch(e){ return false; } };
 let updWait=0;
 async function checkUpdate(){ if(!/^https?:$/.test(location.protocol)) return;
