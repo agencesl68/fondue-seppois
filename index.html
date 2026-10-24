@@ -1080,6 +1080,9 @@ function extrasFromNote(note){
 const caqOf=t=>(tstat[t.id]?.list||[]).reduce((a,x)=>a+Math.ceil((x.f||0)/6),0);
 /* corrections d'après la feuille dessinée du 21/10 quand le sheet est vide ou faux (clé = empreinte du nom, pas de nom en clair dans le code) */
 const PLAN_FIX={'123826758':'22:12, 21:14','-678095414':'6'};
+/* tables remplies depuis l'autre bout (les groupes gardent leur ordre, en partant de la dernière paire de chaises) */
+const SEAT_REV=new Set(['1']);
+const seatOrder=t=>{ const o=[...Array(+t.seats||0).keys()]; return SEAT_REV.has(norm(t.label))?o.sort((x,y)=>(y>>1)-(x>>1)||x-y):o; };
 /* répartit un total entier au prorata (plus forts restes) */
 function distribute(total,weights){ const W=weights.reduce((a,b)=>a+b,0); if(!W||!total) return weights.map(()=>0);
   const raw=weights.map(w=>total*w/W), fl=raw.map(Math.floor); let rem=total-fl.reduce((a,b)=>a+b,0);
@@ -1096,7 +1099,7 @@ function computeSeats(){
     g.tables=parseTables(src).map(l=>byLabel[norm(l)]||{id:null,label:l});
     g.extraManual=S.extra[g.key]!=null; g.extra=g.extraManual?Math.max(0,+S.extra[g.key]||0):(g.extraAuto||0); g.places=g.size+g.extra;
     g.seats=[]; let left=g.places||1; const quota=tableQuotas(src), hasQ=Object.keys(quota).length>0, want={};
-    g.tables.forEach(t=>{ if(!t.id) return; let q=hasQ&&quota[norm(t.label)]!=null?Math.min(quota[norm(t.label)],left):left; want[t.id]=q; const a=occ[t.id]; for(let s=0;s<a.length&&q>0&&left>0;s++) if(!a[s]){a[s]=g.key; g.seats.push({tid:t.id,s}); left--; q--;} if(hasQ&&quota[norm(t.label)]!=null){ left-=q; want[t.id]-=0; } });
+    g.tables.forEach(t=>{ if(!t.id) return; let q=hasQ&&quota[norm(t.label)]!=null?Math.min(quota[norm(t.label)],left):left; want[t.id]=q; const a=occ[t.id]; for(const s of seatOrder(t)){ if(q<=0||left<=0) break; if(!a[s]){a[s]=g.key; g.seats.push({tid:t.id,s}); left--; q--;} } if(hasQ&&quota[norm(t.label)]!=null){ left-=q; want[t.id]-=0; } });
     if(hasQ) left=Math.max(0,(g.places||1)-Object.values(want).reduce((a,b)=>a+b,0)-0);
     g.overflow=left>0&&g.tables.some(t=>t.id);
     // répartition par table : personnes, jambons, petits gratuits, présents
